@@ -12,11 +12,11 @@
     },
     {
       "name": "keyword.control.first.kurt",
-      "match": "\\b(?:const|infix|postfix|prefix|brackets|arity|flat|sym|bool)\\b"
+      "match": "\\b(?:var|const|infix|postfix|prefix|brackets|arity|flat|sym|bool)\\b"
     },
     {
       "name": "keyword.control.second.kurt",
-      "match": "\\b(?:use|assume|let|show|proof|qed|thus|theorem|lemma|proposition|because)\\b"
+      "match": "\\b(?:use|assume|let|show|def|proof|qed|thus|theorem|lemma|proposition|because)\\b"
     },
     {
       "name": "keyword.control.third.kurt",
