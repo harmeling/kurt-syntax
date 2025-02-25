@@ -1,0 +1,30 @@
+{
+  "name": "kurt-syntax",
+  "displayName": "Kurt Syntax",
+  "description": "Syntax highlighting for the Kurt language.",
+  "version": "0.0.1",
+  "publisher": "Stefan Harmeling",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "kurt",
+        "aliases": ["Kurt", "kurt"],
+        "extensions": [".kurt"], 
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "kurt",
+        "scopeName": "source.kurt",
+        "path": "./syntaxes/kurt.tmLanguage.json"
+      }
+    ]
+  }
+}
