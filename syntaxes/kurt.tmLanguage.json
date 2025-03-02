@@ -12,7 +12,7 @@
     },
     {
       "name": "keyword.control.first.kurt",
-      "match": "\\b(?:var|const|infix|postfix|prefix|brackets|arity|bindop|flat|sym|bool)\\b"
+      "match": "\\b(?:var|const|infix|postfix|prefix|brackets|arity|bindop|flat|sym|bool|alias)\\b"
     },
     {
       "name": "keyword.control.second.kurt",
