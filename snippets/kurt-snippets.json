@@ -1,0 +1,29 @@
+{
+    "Function Template": {
+      "prefix": "fun",
+      "body": [
+        "function ${1:name}(${2:args}) {",
+        "    ${3:// body}",
+        "}"
+      ],
+      "description": "Creates a function template"
+    },
+    "If Statement": {
+      "prefix": "if",
+      "body": [
+        "if (${1:condition}) {",
+        "    ${2:// code}",
+        "}"
+      ],
+      "description": "Creates an if statement"
+    },
+    "For Loop": {
+      "prefix": "for",
+      "body": [
+        "for (${1:int} ${2:i} = ${3:0}; ${2:i} < ${4:10}; ${2:i}++) {",
+        "    ${5:// loop body}",
+        "}"
+      ],
+      "description": "Creates a for loop"
+    }
+  }
