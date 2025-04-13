@@ -22,6 +22,9 @@
         "install": "code --install-extension kurt-syntax-0.0.1.vsix --force"
     },
     "main": "./out/extension.js",
+    "activationEvents": [
+        "onLanguage:kurt"
+    ],
     "keywords": [
         "syntax",
         "highlighting",
