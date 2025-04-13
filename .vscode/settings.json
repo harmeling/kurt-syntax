@@ -1,6 +1,10 @@
 {
     "cSpell.words": [
+        "emptyset",
         "forall",
-        "Harmeling"
+        "Harmeling",
+        "notin",
+        "subseteq",
+        "supseteq"
     ]
 }
