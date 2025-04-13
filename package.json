@@ -6,7 +6,7 @@
     "publisher": "Stefan Harmeling",
     "license": "MIT",
     "engines": {
-        "vscode": "^1.70.0"
+        "vscode": "^1.99.0"
     },
     "categories": [
         "Programming Languages"
@@ -15,6 +15,17 @@
         "type": "git",
         "url": "https://github.com/harmeling/kurt-syntax.git"
     },
+    "scripts": {
+         "build": "tsc",
+         "watch": "tsc --watch",
+         "package": "vsce package",
+         "install": "code --install-extension kurt-syntax-0.0.1.vsix --force"
+    },
+    "main": "./out/extension.js",
+    "activationEvents": [
+        "onLanguage:kurt"
+    ],
+    "keywords": ["syntax", "highlighting", "kurt", "dsl", "language"],
     "contributes": {
         "languages": [
             {
@@ -42,5 +53,9 @@
                 "path": "./snippets/kurt-snippets.json"
             }
         ]
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.99.1",
+        "typescript": "^5.8.3"
     }
 }
