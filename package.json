@@ -16,16 +16,19 @@
         "url": "https://github.com/harmeling/kurt-syntax.git"
     },
     "scripts": {
-         "build": "tsc",
-         "watch": "tsc --watch",
-         "package": "vsce package",
-         "install": "code --install-extension kurt-syntax-0.0.1.vsix --force"
+        "build": "tsc",
+        "watch": "tsc --watch",
+        "package": "vsce package",
+        "install": "code --install-extension kurt-syntax-0.0.1.vsix --force"
     },
-    "activationEvents": [
-        "onLanguage:kurt"
-    ],
     "main": "./out/extension.js",
-    "keywords": ["syntax", "highlighting", "kurt", "dsl", "language"],
+    "keywords": [
+        "syntax",
+        "highlighting",
+        "kurt",
+        "dsl",
+        "language"
+    ],
     "contributes": {
         "languages": [
             {
@@ -55,6 +58,7 @@
         ]
     },
     "devDependencies": {
+        "@types/node": "^22.14.1",
         "@types/vscode": "^1.99.1",
         "typescript": "^5.8.3"
     }

@@ -1,36 +1,75 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+
+let replacements: Record<string, string> = {};
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Kurt extension activated!');
+    console.log('🔥 Kurt extension activated');
+
+    // Load replacements.json
+    const replacementsPath = path.join(context.extensionPath, 'extension', 'replacements.json');
+    try {
+        const jsonContent = fs.readFileSync(replacementsPath, 'utf8');
+        replacements = JSON.parse(jsonContent);
+        console.log('✅ Loaded replacements:', replacements);
+    } catch (err) {
+        console.error('❌ Failed to load replacements.json:', err);
+        replacements = {};
+    }
 
     const disposable = vscode.workspace.onDidChangeTextDocument(event => {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor || event.document !== editor.document) return;
+        try {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || event.document !== editor.document) return;
 
-        const changes = event.contentChanges;
-        if (changes.length === 0) return;
+            const changes = event.contentChanges;
+            if (changes.length === 0) return;
 
-        const change = changes[0];
+            const change = changes[0];
+            if (change.text !== ' ') return;
 
-        if (change.text !== ' ') return;
+            const doc = event.document;
+            const spacePos = change.range.start;
+            const lineText = doc.lineAt(spacePos.line).text;
+            const charIndex = spacePos.character;
 
-        const position = change.range.end;
-        const lineText = event.document.lineAt(position.line).text;
-        const beforeCursor = lineText.substring(0, position.character - 1);
+            const textBefore = lineText.substring(0, charIndex);
 
-        console.log('Typed space. Before cursor:', beforeCursor);
+            // Match last \command before space
+            const match = textBefore.match(/(\\[a-zA-Z]+)$/);
 
-        if (beforeCursor.endsWith('\\not')) {
-            const startPos = position.translate(0, -5); // \not + space
-            const range = new vscode.Range(startPos, position);
+            if (match) {
+                const matchedCommand = match[1];
+                const replacement = replacements[matchedCommand];
 
-            console.log('Replacing \\not with ¬');
+                if (replacement) {
+                    // Check if cursor is exactly after the command — i.e., the space is not separating a following word
+                    const matchStart = charIndex - matchedCommand.length;
+                    const matchEnd = charIndex;
 
-            setTimeout(() => {
-                editor.edit(editBuilder => {
-                    editBuilder.replace(range, '¬');
-                });
-            }, 0);
+                    // But ALSO include the space in the range
+                    const startPos = new vscode.Position(spacePos.line, matchStart);
+                    const endPos = new vscode.Position(spacePos.line, matchEnd + 1); // include the space that was typed
+                    const range = new vscode.Range(startPos, endPos);
+
+                    console.log(`✅ Replacing "${matchedCommand} " with "${replacement}"`);
+
+                    setTimeout(() => {
+                        editor.edit(editBuilder => {
+                            editBuilder.replace(range, replacement);
+                        }).then(success => {
+                            if (!success) {
+                                console.error('❌ Edit failed');
+                            } else {
+                                console.log('✅ Replacement succeeded');
+                            }
+                        });
+                    }, 0);
+                }
+            }
+        } catch (err) {
+            console.error('❌ Extension error:', err);
         }
     });
 
