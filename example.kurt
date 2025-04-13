@@ -38,3 +38,7 @@ proof
     = (x + -x) + x       ; by G1
     = x + (-x + x)       ; by G3
 qed
+
+\not 
+\not 
+\not \not \not \not   

@@ -21,10 +21,10 @@
          "package": "vsce package",
          "install": "code --install-extension kurt-syntax-0.0.1.vsix --force"
     },
-    "main": "./out/extension.js",
     "activationEvents": [
         "onLanguage:kurt"
     ],
+    "main": "./out/extension.js",
     "keywords": ["syntax", "highlighting", "kurt", "dsl", "language"],
     "contributes": {
         "languages": [
