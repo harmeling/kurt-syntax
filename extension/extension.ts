@@ -27,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (changes.length === 0) return;
 
             const change = changes[0];
-            if (change.text !== ' ') return;
+            if (change.text !== ' ' && change.text !== '\n') return;
 
             const doc = event.document;
             const spacePos = change.range.start;
