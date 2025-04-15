@@ -8,7 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('🔥 Kurt extension activated');
 
     // Load replacements.json
-    const replacementsPath = path.join(context.extensionPath, 'extension', 'replacements.json');
+    const replacementsPath = path.join(context.extensionPath, 'replacements.json');
     try {
         const jsonContent = fs.readFileSync(replacementsPath, 'utf8');
         replacements = JSON.parse(jsonContent);
