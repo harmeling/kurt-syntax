@@ -27,33 +27,33 @@ export function activate(context: vscode.ExtensionContext) {
             if (changes.length === 0) return;
 
             const change = changes[0];
-            if (change.text !== ' ' && change.text !== '\n') return;
+            const triggerChar = change.text;
+
+            // Only trigger on single non-alphanumeric characters (e.g., space, punctuation)
+            if (!/^[^a-zA-Z0-9]$/.test(triggerChar)) return;
 
             const doc = event.document;
-            const spacePos = change.range.start;
-            const lineText = doc.lineAt(spacePos.line).text;
-            const charIndex = spacePos.character;
+            const triggerPos = change.range.start;
+            const lineText = doc.lineAt(triggerPos.line).text;
+            const charIndex = triggerPos.character;
 
             const textBefore = lineText.substring(0, charIndex);
 
-            // Match last \command before space
+            // Match last \command before the trigger character
             const match = textBefore.match(/(\\[a-zA-Z]+)$/);
-
             if (match) {
                 const matchedCommand = match[1];
                 const replacement = replacements[matchedCommand];
 
                 if (replacement) {
-                    // Check if cursor is exactly after the command — i.e., the space is not separating a following word
                     const matchStart = charIndex - matchedCommand.length;
                     const matchEnd = charIndex;
 
-                    // But ALSO include the space in the range
-                    const startPos = new vscode.Position(spacePos.line, matchStart);
-                    const endPos = new vscode.Position(spacePos.line, matchEnd + 1); // include the space that was typed
+                    const startPos = new vscode.Position(triggerPos.line, matchStart);
+                    const endPos = new vscode.Position(triggerPos.line, matchEnd);
                     const range = new vscode.Range(startPos, endPos);
 
-                    console.log(`✅ Replacing "${matchedCommand} " with "${replacement}"`);
+                    console.log(`✅ Replacing "${matchedCommand}" with "${replacement}" before "${triggerChar}"`);
 
                     setTimeout(() => {
                         editor.edit(editBuilder => {
