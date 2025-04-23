@@ -7,7 +7,6 @@ let replacements: Record<string, string> = {};
 export function activate(context: vscode.ExtensionContext) {
     console.log('🔥 Kurt extension activated');
 
-    // Load replacements.json
     const replacementsPath = path.join(context.extensionPath, 'replacements.json');
     try {
         const jsonContent = fs.readFileSync(replacementsPath, 'utf8');
@@ -29,8 +28,9 @@ export function activate(context: vscode.ExtensionContext) {
             const change = changes[0];
             const triggerChar = change.text;
 
-            // Only trigger on single non-alphanumeric characters (e.g., space, punctuation)
-            if (!/^[^a-zA-Z0-9]$/.test(triggerChar)) return;
+            // Ignore if it's not a single non-alphanumeric character
+            if (triggerChar.length !== 1 && triggerChar !== '\n') return;
+            if (/^[a-zA-Z0-9]$/.test(triggerChar)) return;
 
             const doc = event.document;
             const triggerPos = change.range.start;
@@ -39,7 +39,6 @@ export function activate(context: vscode.ExtensionContext) {
 
             const textBefore = lineText.substring(0, charIndex);
 
-            // Match last \command before the trigger character
             const match = textBefore.match(/(\\[a-zA-Z]+)$/);
             if (match) {
                 const matchedCommand = match[1];
@@ -47,20 +46,34 @@ export function activate(context: vscode.ExtensionContext) {
 
                 if (replacement) {
                     const matchStart = charIndex - matchedCommand.length;
-                    const matchEnd = charIndex;
-
                     const startPos = new vscode.Position(triggerPos.line, matchStart);
-                    const endPos = new vscode.Position(triggerPos.line, matchEnd);
-                    const range = new vscode.Range(startPos, endPos);
+                    let endPos: vscode.Position;
 
-                    console.log(`✅ Replacing "${matchedCommand}" with "${replacement}" before "${triggerChar}"`);
+                    if (triggerChar === ' ') {
+                        // Remove the space
+                        endPos = new vscode.Position(triggerPos.line, charIndex + 1);
+                    } else if (triggerChar === '\n') {
+                        // Remove the newline
+                        endPos = new vscode.Position(triggerPos.line + 1, 0);
+                    } else {
+                        // Keep punctuation etc.
+                        endPos = new vscode.Position(triggerPos.line, charIndex);
+                    }
+
+                    const range = new vscode.Range(startPos, endPos);
+                    const finalText = replacement + (triggerChar === ' ' || triggerChar === '\n' ? '' : triggerChar);
+
+                    console.log(`✅ Replacing "${matchedCommand}" triggered by "${triggerChar === '\n' ? '\\n' : triggerChar}" with "${finalText}"`);
 
                     setTimeout(() => {
                         editor.edit(editBuilder => {
-                            editBuilder.replace(range, replacement);
+                            editBuilder.replace(range, finalText);
                         }).then(success => {
                             if (!success) {
                                 console.error('❌ Edit failed');
+                            } else if (triggerChar === '\n') {
+                                // Manually insert newline after replacement
+                                editor.insertSnippet(new vscode.SnippetString('\n'), editor.selection.active);
                             } else {
                                 console.log('✅ Replacement succeeded');
                             }
