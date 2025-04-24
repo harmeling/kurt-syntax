@@ -61,7 +61,8 @@ export function activate(context: vscode.ExtensionContext) {
                     }
 
                     const range = new vscode.Range(startPos, endPos);
-                    const finalText = replacement + (triggerChar === ' ' || triggerChar === '\n' ? '' : triggerChar);
+                    const shouldKeepTrigger = triggerChar !== ' ' && triggerChar !== '\n' && triggerChar !== '\\';
+                    const finalText = replacement + (shouldKeepTrigger ? triggerChar : '');
 
                     console.log(`✅ Replacing "${matchedCommand}" triggered by "${triggerChar === '\n' ? '\\n' : triggerChar}" with "${finalText}"`);
 
