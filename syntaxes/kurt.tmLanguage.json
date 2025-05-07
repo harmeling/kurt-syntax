@@ -16,7 +16,7 @@
     },
     {
       "name": "keyword.control.second.kurt",
-      "match": "\\b(?:load|use|assume|show|def|let|take|proof|qed|thus|theorem|lemma|proposition|because)\\b"
+      "match": "\\b(?:load|use|assume|show|def|let|take|begin|end|break|thus|proof|qed|thus|theorem|lemma|proposition|because)\\b"
     },
     {
       "name": "keyword.control.third.kurt",
