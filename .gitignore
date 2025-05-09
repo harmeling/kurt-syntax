@@ -1,7 +1,6 @@
 node_modules/
 out/
 *.tsbuildinfo
-*.vsix
 .DS_Store
 .vscode/
 *~
