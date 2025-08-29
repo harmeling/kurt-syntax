@@ -14,8 +14,8 @@
       "brackets" "arity" "bindop" "flat" "sym" "bool" "alias"))
 
   (defconst kurt-keywords-second
-    '("load", "use" "assume" "let" "show" "def" "proof"
-      "qed" "thus" "theorem" "lemma" "proposition" "because"))
+    '("load", "use" "assume" "fix" "pick" "show" "def" "proof"
+      "qed" "thus"))
 
   (defconst kurt-keywords-third
     '("contradiction" "true" "false"))
