@@ -16,7 +16,7 @@
     },
     {
       "name": "keyword.control.second.kurt",
-      "match": "\\b(?:load|use|assume|show|def|fix|pick|proof|qed|thus|with|parse|tokenize|format|level|mode|context|trail|syntax|theory|implications|help|break)\\b"
+      "match": "\\b(?:load|use|assume|case|show|def|fix|pick|proof|qed|thus|with|parse|tokenize|format|level|mode|context|trail|syntax|theory|implications|help|break)\\b"
     },
     {
       "name": "keyword.control.third.kurt",
