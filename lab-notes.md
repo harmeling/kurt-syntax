@@ -14,3 +14,31 @@ Running log of agent-session setup and activity for this repo, on the
   + companion Emacs mode for the "Kurt" language, sharing
   `replacements.json` as the macro dictionary; noted that
   `snippets/kurt-snippets.json` referenced in `package.json` is missing).
+- Commit author was auto-derived as
+  `stefan.harmeling@ls8-slurm.cs.tu-dortmund.de`; fixed to
+  `stefan.harmeling@cs.tu-dortmund.de` (`git commit --amend
+  --reset-author`), but GitHub rejected the push (`GH007`, email-privacy
+  protection — that address isn't verified/public on the `harmeling`
+  account). Re-amended to the GitHub noreply address
+  `2370009+harmeling@users.noreply.github.com` and pushed successfully:
+  `git push -u origin agent`.
+
+## 2026-09-09 14:06 — test launch (no task)
+
+- Spawned a `start-agent` test session, no task given, to verify Remote
+  Control shows up correctly.
+- Job/session name: `kurt-syntax-1`
+- Claude Code session ID: `session_012MwThtAVuuPPEHeGjRew7d`
+- Node: `magpie.cs.tu-dortmund.de` (CPU only, `--mem=16G`, no time limit —
+  all defaults)
+- SLURM job ID: `103906`
+- Launched via `tmux new-session -d -c ~/git/kurt-syntax -s kurt-syntax-1
+  "srun --job-name=kurt-syntax-1 --nodelist=magpie.cs.tu-dortmund.de
+  --mem=16G --pty claude --remote-control kurt-syntax-1"`
+- Hit the first-run "trust this folder" prompt inside the job; confirmed
+  with explicit user permission (`tmux send-keys -t kurt-syntax-1 Down
+  Enter`).
+- Monitor: `squeue -j 103906`
+- Reconnect (after a time-limit kill or disconnect): resubmit the same
+  `srun` command with `claude --resume session_012MwThtAVuuPPEHeGjRew7d`
+- Cancel: `scancel 103906`
