@@ -28,9 +28,13 @@ Running log of agent-session setup and activity for this repo, on the
 - Spawned a `start-agent` test session, no task given, to verify Remote
   Control shows up correctly.
 - Job/session name: `kurt-syntax-1`
-- Claude Code session ID: `session_012MwThtAVuuPPEHeGjRew7d`
-- Node: `magpie.cs.tu-dortmund.de` (CPU only, `--mem=16G`, no time limit —
-  all defaults)
+- Claude Code session ID (transcript UUID, for `--resume`):
+  `35b0e268-2637-4b20-adcd-3e24b55e3b33`. Note: the Remote Control banner
+  showed a different, cosmetic ID (`session_012MwThtAVuuPPEHeGjRew7d`) —
+  that one does *not* work with `--resume`; corrected on 2026-09-09 while
+  starting the next session on this repo.
+- Node: `magpie.cs.tu-dortmund.de` (CPU only, `--mem=16G`, default 2h time
+  limit — all defaults)
 - SLURM job ID: `103906`
 - Launched via `tmux new-session -d -c ~/git/kurt-syntax -s kurt-syntax-1
   "srun --job-name=kurt-syntax-1 --nodelist=magpie.cs.tu-dortmund.de
@@ -40,7 +44,8 @@ Running log of agent-session setup and activity for this repo, on the
   Enter`).
 - Monitor: `squeue -j 103906`
 - Reconnect (after a time-limit kill or disconnect): resubmit the same
-  `srun` command with `claude --resume session_012MwThtAVuuPPEHeGjRew7d`
+  `srun` command with
+  `claude --resume 35b0e268-2637-4b20-adcd-3e24b55e3b33`
 - Cancel: `scancel 103906`
 
 ## 2026-09-09 14:12 — cancelled
@@ -49,3 +54,52 @@ Running log of agent-session setup and activity for this repo, on the
   request, after confirming on the phone that Remote Control worked. No
   task had been given, so nothing in-flight was lost. tmux wrapper exited
   on its own once the job ended.
+
+## 2026-09-09 — fixed missing `snippets/kurt-snippets.json`
+
+- Task: `package.json`'s `contributes.snippets` pointed at
+  `snippets/kurt-snippets.json`, which didn't exist (already flagged in
+  `CLAUDE.md`). Chose to **create the file** rather than remove the
+  reference, because the language has clear, realistic structural idioms
+  worth snippet support (visible in `example.kurt` and the keyword groups
+  in `syntaxes/kurt.tmLanguage.json`): operator declarations
+  (`infix`/`prefix`), `const`, `use`, a `show`/`proof`/`qed` block, and
+  `load`. Removing the reference would have been the lazier fix but
+  throws away real, low-cost functionality.
+- Created `snippets/kurt-snippets.json` with 6 snippets in standard VS
+  Code snippet-file format (`{prefix, body, description}` per entry):
+  `infix`, `prefix`, `const`, `use`, `show` (expands to a full
+  `show ... proof ... qed` skeleton with a tabstop for the proof body),
+  and `load`.
+- Validated the file with `python3 -c "import json; json.load(...)"`
+  (valid JSON). Could not run `vsce package` to fully verify packaging —
+  no `node`/`npm`/`vsce` available in this shell environment — so this is
+  a static/schema-level check only, not a verified package build.
+- No other files changed.
+
+## 2026-09-09 16:22 — real launch (snippets fix)
+
+- Resumed session `35b0e268-2637-4b20-adcd-3e24b55e3b33` (the prior idle
+  test session — no work had happened in it, so this is effectively a
+  fresh start) with a task.
+- Job/session name: `kurt-syntax-1`
+- Node: `magpie.cs.tu-dortmund.de` (CPU only, `--mem=16G`, default 2h time
+  limit)
+- SLURM job ID: `103999`
+- Task given: fix `package.json`'s `contributes.snippets` reference to the
+  missing `snippets/kurt-snippets.json` (create a minimal real snippets
+  file, or remove the reference — agent's judgement, documented here by
+  it once done).
+- Launched via a wrapper script (avoids quoting the multi-line prompt
+  through nested shells):
+  `tmux new-session -d -c ~/git/kurt-syntax -s kurt-syntax-1 "bash
+  <scratchpad>/launch-kurt-syntax-1.sh"`, where the script runs
+  `srun --job-name=kurt-syntax-1 --nodelist=magpie.cs.tu-dortmund.de
+  --mem=16G --pty claude --remote-control kurt-syntax-1 --resume
+  35b0e268-2637-4b20-adcd-3e24b55e3b33 "<standing instructions + task>"`.
+- Note: the account showed "92% of weekly limit used, resets Sep 10 9pm
+  UTC" at launch — may interrupt this session before it finishes.
+- Monitor: `squeue -j 103999`
+- Reconnect (after a time-limit kill or disconnect): resubmit the same
+  `srun` command (same `--resume` UUID — it stays valid across kills).
+- Cancel: `scancel 103999`

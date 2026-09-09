@@ -1,0 +1,47 @@
+{
+    "infix operator": {
+        "prefix": "infix",
+        "body": [
+            "infix \"${1:+}\"  ${2:60} ${3:60}  ; ${4:binary operator}"
+        ],
+        "description": "Declare an infix operator with left/right binding power"
+    },
+    "prefix operator": {
+        "prefix": "prefix",
+        "body": [
+            "prefix \"${1:-}\"  ${2:80}  ; ${3:unary operator}"
+        ],
+        "description": "Declare a prefix operator with binding power"
+    },
+    "const declaration": {
+        "prefix": "const",
+        "body": [
+            "const ${1:0}  ; ${2:comment}"
+        ],
+        "description": "Declare a constant (as opposed to a variable)"
+    },
+    "use axiom": {
+        "prefix": "use",
+        "body": [
+            "use ${1:formula}  ; ${2:comment}"
+        ],
+        "description": "Introduce an axiom to use in later proofs"
+    },
+    "show/proof/qed": {
+        "prefix": "show",
+        "body": [
+            "show ${1:formula}  ; ${2:comment}",
+            "proof",
+            "    ${0}",
+            "qed"
+        ],
+        "description": "Show a theorem and open a proof block ended by qed"
+    },
+    "load file": {
+        "prefix": "load",
+        "body": [
+            "load \"${1:filename}\""
+        ],
+        "description": "Load another Kurt source file"
+    }
+}
