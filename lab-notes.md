@@ -42,3 +42,10 @@ Running log of agent-session setup and activity for this repo, on the
 - Reconnect (after a time-limit kill or disconnect): resubmit the same
   `srun` command with `claude --resume session_012MwThtAVuuPPEHeGjRew7d`
 - Cancel: `scancel 103906`
+
+## 2026-09-09 14:12 — cancelled
+
+- Cancelled job `103906` (`kurt-syntax-1`) via `kill-agent`, at user's
+  request, after confirming on the phone that Remote Control worked. No
+  task had been given, so nothing in-flight was lost. tmux wrapper exited
+  on its own once the job ended.
