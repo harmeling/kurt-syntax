@@ -120,3 +120,9 @@ Running log of agent-session setup and activity for this repo, on the
   `srun` command with `claude --resume
   35b0e268-2637-4b20-adcd-3e24b55e3b33`
 - Cancel: `scancel 105154`
+
+## 2026-09-11 — cancelled
+
+- Cancelled job `105154` (`kurt-syntax-1`) via `kill-agent`, at user's
+  request. It was idle (standing by for Remote Control), no task had been
+  directed to it, so nothing in-flight was lost.
