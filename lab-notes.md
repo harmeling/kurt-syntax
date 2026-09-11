@@ -103,3 +103,20 @@ Running log of agent-session setup and activity for this repo, on the
 - Reconnect (after a time-limit kill or disconnect): resubmit the same
   `srun` command (same `--resume` UUID — it stays valid across kills).
 - Cancel: `scancel 103999`
+- (Job `103999` was later killed by the 2h time limit while idle — the
+  transcript was intact, no repair needed on next resume.)
+
+## 2026-09-11 — resumed, idle for Remote Control
+
+- Resumed session `35b0e268-2637-4b20-adcd-3e24b55e3b33` again, no task
+  given — launched purely to be available via Remote Control for the user
+  to direct live from their phone.
+- Job/session name: `kurt-syntax-1`
+- Node: `magpie.cs.tu-dortmund.de` (CPU only, `--mem=16G`, default 2h time
+  limit)
+- SLURM job ID: `105154`
+- Monitor: `squeue -j 105154`
+- Reconnect (after a time-limit kill or disconnect): resubmit the same
+  `srun` command with `claude --resume
+  35b0e268-2637-4b20-adcd-3e24b55e3b33`
+- Cancel: `scancel 105154`
