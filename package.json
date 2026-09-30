@@ -1,8 +1,8 @@
 {
     "name": "kurt-syntax",
     "displayName": "Kurt Syntax",
-    "description": "Syntax highlighting for the Kurt language.",
-    "version": "0.0.1",
+    "description": "Editor support for the Kurt proof language.",
+    "version": "0.1.0",
     "publisher": "Stefan Harmeling",
     "license": "MIT",
     "engines": {
@@ -18,8 +18,9 @@
     "scripts": {
         "build": "tsc",
         "watch": "tsc --watch",
+        "check": "python3 scripts/check_editor_support.py",
         "package": "vsce package",
-        "install": "code --install-extension kurt-syntax-0.0.1.vsix --force"
+        "install": "code --install-extension kurt-syntax-0.1.0.vsix --force"
     },
     "main": "./out/extension.js",
     "activationEvents": [

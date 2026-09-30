@@ -12,11 +12,11 @@
     },
     {
       "name": "keyword.control.first.kurt",
-      "match": "\\b(?:var|const|infix|postfix|prefix|brackets|arity|bindop|chain|flat|sym|bool|alias)\\b"
+      "match": "\\b(?:var|const|infix|postfix|prefix|brackets|arity|bindop|chain|flat|sym|bool|calc|alias)\\b"
     },
     {
       "name": "keyword.control.second.kurt",
-      "match": "\\b(?:load|use|assume|case|show|def|let|pick|proof|qed|done|with|parse|tokenize|format|level|mode|context|trail|syntax|theory|help|break)\\b"
+      "match": "\\b(?:load|use|assume|case|show|def|let|pick|proof|qed|with|parse|tokenize|format|level|mode|context|trail|syntax|theory|help|save|local|sandbox|expect|cert|inspect|hint|verbose|break)\\b"
     },
     {
       "name": "keyword.control.third.kurt",

@@ -21,6 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
         try {
             const editor = vscode.window.activeTextEditor;
             if (!editor || event.document !== editor.document) return;
+            if (event.document.languageId !== 'kurt') return;
 
             const changes = event.contentChanges;
             if (changes.length === 0) return;
@@ -61,8 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
                     }
 
                     const range = new vscode.Range(startPos, endPos);
-                    const shouldKeepTrigger = triggerChar !== ' ' && triggerChar !== '\n' && triggerChar !== '\\';
-                    const finalText = replacement + (shouldKeepTrigger ? triggerChar : '');
+                    const finalText = replacement;
 
                     console.log(`✅ Replacing "${matchedCommand}" triggered by "${triggerChar === '\n' ? '\\n' : triggerChar}" with "${finalText}"`);
 

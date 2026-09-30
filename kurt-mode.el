@@ -11,14 +11,14 @@
   ;; Define keyword groups
   (defconst kurt-keywords-first
     '("var" "const" "infix" "postfix" "prefix"
-      "brackets" "arity" "bindop" "flat" "sym" "bool" "alias"))
+      "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "calc" "alias"))
 
   (defconst kurt-keywords-second
-    '("load", "use" "assume" "fix" "pick" "show" "def" "proof"
-      "qed" "thus"))
+    '("load" "save" "use" "assume" "case" "let" "pick" "with" "show" "def" "local" "proof"
+      "qed" "todo" "sandbox" "expect" "break"))
 
   (defconst kurt-keywords-third
-    '("contradiction" "true" "false"))
+    '("help" "hint" "verbose" "parse" "tokenize" "format" "level" "mode" "context" "trail" "syntax" "theory" "cert" "inspect" "true" "false"))
 
   ;; Font-lock (syntax highlighting), could use font-lock-{keyword,builtin,constant}-face
   (setq-local font-lock-defaults
@@ -46,7 +46,7 @@
 (defun kurt-load-replacements ()
   "Load replacements from replacements.json."
   (let ((file (expand-file-name "replacements.json"
-                                (file-name-directory (or load-file-name buffer-file-name)))))
+                                kurt-mode-directory)))
     (when (file-exists-p file)
       (let* ((json-object-type 'hash-table)
              (json (json-read-file file)))

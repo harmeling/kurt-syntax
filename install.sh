@@ -4,4 +4,4 @@
 vsce package
 
 # install it in vscode
-code --install-extension kurt-syntax-0.0.1.vsix
+code --install-extension kurt-syntax-0.1.0.vsix
