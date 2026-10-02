@@ -1,6 +1,6 @@
 # Kurt editor support
 
-Editor support for the [Kurt proof language](https://github.com/harmeling/kurt-lang), currently aligned with Kurt 0.9.
+Editor support for the [Kurt proof language](https://github.com/harmeling/kurt-lang), currently aligned with Kurt 0.7.
 
 ## VS Code
 
