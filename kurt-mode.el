@@ -18,7 +18,7 @@
       "qed" "todo" "sandbox" "expect" "break"))
 
   (defconst kurt-keywords-third
-    '("help" "hint" "verbose" "parse" "tokenize" "format" "level" "mode" "context" "trail" "syntax" "theory" "cert" "inspect" "true" "false"))
+    '("help" "hint" "verbose" "parse" "tokenize" "format" "level" "mode" "context" "trail" "syntax" "theory" "cert" "breakpoint" "true" "false"))
 
   ;; Font-lock (syntax highlighting), could use font-lock-{keyword,builtin,constant}-face
   (setq-local font-lock-defaults
@@ -79,6 +79,44 @@ Works when the user types a space or newline right after the command."
 
 (add-hook 'kurt-mode-hook #'kurt-load-replacements)
 (add-hook 'post-self-insert-hook #'kurt-check-and-replace)
+
+;; Completion without the language server (`completion-at-point', M-TAB): keywords, the theories
+;; after `load', and the names and labels of this buffer; the lists are in completions.json,
+;; generated from kurt-lang
+(defvar kurt-completions nil "Keywords and theories, from completions.json.")
+
+(defun kurt-load-completions ()
+  (let ((file (expand-file-name "completions.json"
+                                (file-name-directory (or load-file-name (locate-library "kurt-mode"))))))
+    (when (file-readable-p file)
+      (setq kurt-completions (json-read-file file)))))
+
+(defun kurt-completion-at-point ()
+  "Complete a keyword, a theory after `load', or a name or label of this buffer."
+  (let* ((end (point))
+         (start (save-excursion (skip-chars-backward "^ \t\n()[]{},=\"") (point)))
+         (line (buffer-substring-no-properties (line-beginning-position) end))
+         (keywords (append (alist-get 'keywords kurt-completions) nil))
+         (theories (append (alist-get 'theories kurt-completions) nil))
+         (names '()))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\\s-*\\(?:const\\|var\\|bool\\|def\\|arity\\|let\\|pick\\)\\s-+\\([^;\n]+\\)" nil t)
+        (dolist (name (split-string (match-string 1) "[ ,=]+" t))
+          (when (string-match-p "\\`[$%]?[A-Za-z][A-Za-z0-9]*\\'" name) (push name names))))
+      (goto-char (point-min))
+      (while (re-search-forward "\"\\([^\"\n]+\\)\"" nil t) (push (match-string 1) names)))
+    (list start end (if (string-match-p "\\`\\s-*load\\b" line) theories (append keywords names)))))
+
+(add-hook 'kurt-mode-hook
+          (lambda ()
+            (unless kurt-completions (kurt-load-completions))
+            (add-hook 'completion-at-point-functions #'kurt-completion-at-point nil t)))
+
+;; Kurt's language server (`kurt --lsp'): `M-x eglot' in a .kurt file starts it -- errors and
+;; todos at their lines, the reason of each checked line, completion with the state at the cursor
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs '(kurt-mode . ("kurt" "--lsp"))))
 
 ;; Automatically use kurt-mode for .kurt files
 (add-to-list 'auto-mode-alist '("\\.kurt\\'" . kurt-mode))

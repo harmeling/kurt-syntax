@@ -59,11 +59,35 @@
                 "language": "kurt",
                 "path": "./snippets/kurt-snippets.json"
             }
-        ]
+        ],
+        "configuration": {
+            "title": "Kurt",
+            "properties": {
+                "kurt.server.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Use Kurt's language server (`kurt --lsp`): errors and todos at their lines, the reason of each checked line, completion with the state at the cursor."
+                },
+                "kurt.server.command": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": [
+                        "kurt",
+                        "--lsp"
+                    ],
+                    "description": "How to start the language server, e.g. [\"python3\", \"-m\", \"kurt\", \"--lsp\"] or [\"python3\", \"/path/to/kurt.py\", \"--lsp\"]."
+                }
+            }
+        }
     },
     "devDependencies": {
         "@types/node": "^22.14.1",
         "@types/vscode": "^1.99.1",
         "typescript": "^5.8.3"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^9.0.1"
     }
 }

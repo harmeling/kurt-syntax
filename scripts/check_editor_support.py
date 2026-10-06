@@ -27,6 +27,12 @@ for path in files:
     missing = expected - words(path)
     if missing:
         failures.append(f"{path.relative_to(ROOT)} misses: {', '.join(sorted(missing))}")
+# completions.json is generated from kurt-lang (scripts/generate_completions.py): up to date?
+import importlib.util
+spec = importlib.util.spec_from_file_location("gen", ROOT / "scripts" / "generate_completions.py")
+gen = importlib.util.module_from_spec(spec); spec.loader.exec_module(gen)
+if json.loads((ROOT / "completions.json").read_text(encoding="utf-8")) != gen.data():
+    failures.append("completions.json is out of date: run scripts/generate_completions.py")
 if failures:
     raise SystemExit("\n".join(failures))
 print(f"editor definitions cover {len(expected)} Kurt words")

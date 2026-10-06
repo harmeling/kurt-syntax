@@ -126,3 +126,16 @@ Running log of agent-session setup and activity for this repo, on the
 - Cancelled job `105154` (`kurt-syntax-1`) via `kill-agent`, at user's
   request. It was idle (standing by for Remote Control), no task had been
   directed to it, so nothing in-flight was lost.
+
+## 2026-10-06: Kurt's language server in the editors; completion without it
+
+- `inspect` is `breakpoint` now (Kurt 0.7.5), in all three keyword lists.
+- VS Code: a client for `kurt --lsp` (vscode-languageclient; settings `kurt.server.enabled`,
+  `kurt.server.command`); without it a static completion (keywords, theories after `load`, the
+  names and labels of the file). Emacs: `M-x eglot` starts the server (registered in
+  kurt-mode.el), and `completion-at-point` without it. Neovim: ftplugin/kurt.lua starts the
+  server if `kurt` is installed; Vim: syntax completion.
+- completions.json (keywords, theories) is generated from kurt-lang
+  (scripts/generate_completions.py); check_editor_support.py checks it.
+- Not built or run here (no node, no emacs on this machine): `npm install && npm run build`,
+  and a try in each editor, are still to do.
