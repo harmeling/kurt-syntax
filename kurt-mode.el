@@ -18,7 +18,7 @@
       "qed" "todo" "sandbox" "expect" "break"))
 
   (defconst kurt-keywords-third
-    '("help" "hint" "verbose" "parse" "tokenize" "format" "level" "mode" "context" "trail" "syntax" "theory" "cert" "breakpoint" "true" "false"))
+    '("help" "hint" "parse" "tokenize" "format" "level" "mode" "context" "trail" "syntax" "theory" "cert" "breakpoint" "true" "false"))
 
   ;; Font-lock (syntax highlighting), could use font-lock-{keyword,builtin,constant}-face
   (setq-local font-lock-defaults
