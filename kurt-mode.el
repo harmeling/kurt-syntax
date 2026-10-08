@@ -2,6 +2,20 @@
 (require 'json)
 (require 'subr-x) ;; for when-let
 
+(defgroup kurt nil
+  "Editing Kurt proof files."
+  :group 'languages)
+
+(defcustom kurt-enable-eglot t
+  "When non-nil, start Eglot automatically when the `kurt` executable is available."
+  :type 'boolean
+  :group 'kurt)
+
+(defcustom kurt-lsp-command '("kurt" "--lsp")
+  "Command used by Eglot to start the Kurt language server."
+  :type '(repeat string)
+  :group 'kurt)
+
 (define-derived-mode kurt-mode prog-mode "Kurt"
   "A minimal major mode for the Kurt language."
   ;; Comment syntax
@@ -15,10 +29,10 @@
 
   (defconst kurt-keywords-second
     '("load" "save" "use" "assume" "case" "let" "pick" "with" "show" "def" "local" "proof"
-      "qed" "todo" "sandbox" "expect" "break"))
+      "qed" "todo" "sandbox" "expect" "break" "breakpoint"))
 
   (defconst kurt-keywords-third
-    '("help" "hint" "verbose" "parse" "tokenize" "format" "level" "mode" "context" "trail" "syntax" "theory" "cert" "inspect" "true" "false"))
+    '("help" "hint" "parse" "tokenize" "format" "level" "mode" "context" "trail" "syntax" "theory" "list" "cert" "true" "false"))
 
   ;; Font-lock (syntax highlighting), could use font-lock-{keyword,builtin,constant}-face
   (setq-local font-lock-defaults
@@ -80,10 +94,21 @@ Works when the user types a space or newline right after the command."
 (add-hook 'kurt-mode-hook #'kurt-load-replacements)
 (add-hook 'post-self-insert-hook #'kurt-check-and-replace)
 
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs `(kurt-mode . ,kurt-lsp-command)))
+
+(defun kurt-eglot-ensure ()
+  "Start the Kurt language server when automatic Eglot support is enabled."
+  (when (and kurt-enable-eglot
+             (executable-find (car kurt-lsp-command))
+             (require 'eglot nil t))
+    (eglot-ensure)))
+
+(add-hook 'kurt-mode-hook #'kurt-eglot-ensure)
+
 ;; Automatically use kurt-mode for .kurt files
 (add-to-list 'auto-mode-alist '("\\.kurt\\'" . kurt-mode))
 
 (provide 'kurt-mode)
 
 ;;; kurt-mode.el ends here
-

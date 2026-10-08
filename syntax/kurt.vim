@@ -1,7 +1,7 @@
 if exists("b:current_syntax") | finish | endif
 syn keyword kurtDeclaration var const infix postfix prefix brackets arity bindop chain flat sym bool calc alias
-syn keyword kurtProof load save use show def local proof qed todo assume case let pick with sandbox expect break
-syn keyword kurtInspection help hint verbose parse tokenize format level mode context trail syntax theory cert inspect
+syn keyword kurtProof load save use show def local proof qed todo assume case let pick with sandbox expect break breakpoint
+syn keyword kurtInspection help hint parse tokenize format level mode context trail syntax theory list cert
 syn keyword kurtConstant true false
 syn match kurtSchemaVariable /%[[:alnum:]_]\+/
 syn match kurtTermVariable /\$[[:alnum:]_]\+/
