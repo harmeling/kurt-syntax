@@ -32,7 +32,11 @@ vim.g.kurt_server_extra_args = {}
 vim.g.kurt_theory_paths = { '/path/to/trusted/theories' }
 vim.g.kurt_strict = false
 vim.g.kurt_check_on_type = true
+vim.g.kurt_inlay_hints = true   -- the reasons at the ends of the lines
+vim.g.kurt_line_numbers = 1     -- (also in Vim)
 ```
+
+The reasons appear as inlay hints (Neovim 0.10 or newer), `K` on a line shows its reason with its certificate, and `<C-x><C-o>` completes with the state at the cursor (in a proof: its goal).
 
 Classic Vim continues to use the syntax and filetype support without LSP.
 
