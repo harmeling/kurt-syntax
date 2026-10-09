@@ -10,7 +10,7 @@
 
   ;; Define keyword groups
   (defconst kurt-keywords-first
-    '("var" "const" "infix" "postfix" "prefix"
+    '("var" "const" "sort" "infix" "postfix" "prefix"
       "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "calc" "alias"))
 
   (defconst kurt-keywords-second
@@ -18,7 +18,7 @@
       "qed" "todo" "sandbox" "expect" "break"))
 
   (defconst kurt-keywords-third
-    '("help" "hint" "parse" "tokenize" "format" "level" "mode" "context" "trail" "syntax" "theory" "cert" "breakpoint" "true" "false"))
+    '("help" "hint" "parse" "tokenize" "format" "summary" "syntax" "theory" "cert" "breakpoint" "true" "false"))
 
   ;; Font-lock (syntax highlighting), could use font-lock-{keyword,builtin,constant}-face
   (setq-local font-lock-defaults
