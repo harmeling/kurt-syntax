@@ -36,6 +36,11 @@
         "language"
     ],
     "contributes": {
+        "configurationDefaults": {
+            "[kurt]": {
+                "editor.lineNumbers": "on"
+            }
+        },
         "languages": [
             {
                 "id": "kurt",
@@ -105,7 +110,13 @@
                 "kurt.inlayHints.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Show proof reasons as inlay hints."
+                    "description": "Show the reason of each checked line after its end, as in Kurt's output."
+                },
+                "kurt.reasons.column": {
+                    "type": "integer",
+                    "default": 42,
+                    "minimum": 0,
+                    "description": "The column where the reasons start (Kurt's own output uses 42)."
                 },
                 "kurt.trace.server": {
                     "type": "string",

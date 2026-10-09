@@ -15,6 +15,8 @@ let output: vscode.OutputChannel;
 let status: vscode.StatusBarItem;
 let restartQueue: Promise<void> = Promise.resolve();
 let stateSubscription: vscode.Disposable | undefined;
+let reasonDecoration: vscode.TextEditorDecorationType;
+let reasonTimer: ReturnType<typeof setTimeout> | undefined;
 
 function configuration(): vscode.WorkspaceConfiguration {
     return vscode.workspace.getConfiguration('kurt');
@@ -83,17 +85,18 @@ async function startServer(): Promise<void> {
             checkOnType: config.get<boolean>('checkOnType', true),
         },
         middleware: {
-            provideInlayHints: (document, range, token, next) =>
-                configuration().get<boolean>('inlayHints.enabled', true)
-                    ? next(document, range, token)
-                    : null,
+            // the reasons are drawn by `refreshReasons` (aligned at a column), not as inlay hints
+            provideInlayHints: () => null,
         },
     };
     const next = new LanguageClient('kurt', 'Kurt Language Server', serverOptions, clientOptions);
     client = next;
     stateSubscription = next.onDidChangeState(event => {
         if (event.newState === State.Starting) setStatus('Kurt: starting…', `${command} ${args.join(' ')}`);
-        if (event.newState === State.Running) refreshProblemStatus();
+        if (event.newState === State.Running) {
+            refreshProblemStatus();
+            scheduleReasons();
+        }
         if (event.newState === State.Stopped && client === next) {
             setStatus('Kurt unavailable', 'Kurt language server stopped', 'kurt.restartServer');
         }
@@ -150,7 +153,74 @@ function registerReplacements(context: vscode.ExtensionContext): void {
     }));
 }
 
+// The reason of each checked line (`; 5 by 3(4)`), after its end and aligned at a column, as in
+// Kurt's own output: the server's inlay hints, drawn as decorations -- an inlay hint can't be
+// padded to a column without a background box over the padding.
+function visualWidth(text: string, tabSize: number): number {
+    let width = 0;
+    for (const character of text) {
+        width = character === '\t' ? width + tabSize - (width % tabSize) : width + 1;
+    }
+    return width;
+}
+
+type ReasonHint = { position: { line: number }, label: string | { value: string }[] };
+
+function labelText(label: string | { value: string }[]): string {
+    return typeof label === 'string' ? label : label.map(part => part.value).join('');
+}
+
+async function refreshReasons(): Promise<void> {
+    const enabled = configuration().get<boolean>('inlayHints.enabled', true);
+    const column = configuration().get<number>('reasons.column', 42);
+    for (const editor of vscode.window.visibleTextEditors) {
+        const document = editor.document;
+        if (document.languageId !== 'kurt') continue;
+        if (!enabled || !client || client.state !== State.Running) {
+            editor.setDecorations(reasonDecoration, []);
+            continue;
+        }
+        const whole = new vscode.Range(0, 0, document.lineCount, 0);
+        let hints: ReasonHint[] | null = null;
+        try {
+            hints = await client.sendRequest<ReasonHint[] | null>('textDocument/inlayHint', {
+                textDocument: { uri: document.uri.toString() },
+                range: client.code2ProtocolConverter.asRange(whole),
+            });
+        } catch (error) {
+            continue;                     // (the server restarts, or the document closed)
+        }
+        const tabSize = typeof editor.options.tabSize === 'number' ? editor.options.tabSize : 4;
+        const decorations: vscode.DecorationOptions[] = [];
+        for (const hint of hints ?? []) {
+            const line = hint.position.line;
+            if (line >= document.lineCount) continue;
+            const text = document.lineAt(line).text;
+            const reason = labelText(hint.label).replace(/^\s*;\s*/, '');
+            const pad = Math.max(2, column - visualWidth(text, tabSize));
+            const hover = new vscode.MarkdownString();
+            hover.appendCodeblock(`${text.trim()}   ; ${reason}`, 'kurt');
+            decorations.push({
+                range: new vscode.Range(line, text.length, line, text.length),
+                hoverMessage: hover,
+                renderOptions: { after: { contentText: `; ${reason}`, margin: `0 0 0 ${pad}ch` } },
+            });
+        }
+        editor.setDecorations(reasonDecoration, decorations);
+    }
+}
+
+function scheduleReasons(): void {
+    if (reasonTimer) clearTimeout(reasonTimer);
+    reasonTimer = setTimeout(() => { void refreshReasons(); }, 100);
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    reasonDecoration = vscode.window.createTextEditorDecorationType({
+        after: { color: new vscode.ThemeColor('editorInlayHint.foreground') },
+        rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
+    });
+    context.subscriptions.push(reasonDecoration);
     output = vscode.window.createOutputChannel('Kurt Language Server');
     status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 20);
     context.subscriptions.push(output, status);
@@ -179,10 +249,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 void vscode.window.showInformationMessage(error ? `Kurt: ${message}` : message);
             });
         }),
-        vscode.languages.onDidChangeDiagnostics(refreshProblemStatus),
+        vscode.languages.onDidChangeDiagnostics(() => {
+            refreshProblemStatus();
+            scheduleReasons();            // (the server publishes them after each check)
+        }),
+        vscode.window.onDidChangeVisibleTextEditors(scheduleReasons),
         vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('kurt.server') || event.affectsConfiguration('kurt.checkOnType')) {
                 void queueRestart();
+            }
+            if (event.affectsConfiguration('kurt.inlayHints') || event.affectsConfiguration('kurt.reasons')) {
+                scheduleReasons();
             }
         }),
     );
