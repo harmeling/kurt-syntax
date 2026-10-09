@@ -198,11 +198,8 @@ async function refreshReasons(): Promise<void> {
             const text = document.lineAt(line).text;
             const reason = labelText(hint.label).replace(/^\s*;\s*/, '');
             const pad = Math.max(2, column - visualWidth(text, tabSize));
-            const hover = new vscode.MarkdownString();
-            hover.appendCodeblock(`${text.trim()}   ; ${reason}`, 'kurt');
-            decorations.push({
+            decorations.push({         // (its hover comes from the server: the certificate of the line)
                 range: new vscode.Range(line, text.length, line, text.length),
-                hoverMessage: hover,
                 renderOptions: { after: { contentText: `; ${reason}`, margin: `0 0 0 ${pad}ch` } },
             });
         }
