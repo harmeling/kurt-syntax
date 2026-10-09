@@ -20,11 +20,18 @@
   :type '(repeat string)
   :group 'kurt)
 
+(defcustom kurt-line-numbers t
+  "When non-nil, show line numbers in Kurt buffers (the reasons refer to lines by number)."
+  :type 'boolean
+  :group 'kurt)
+
 (define-derived-mode kurt-mode prog-mode "Kurt"
   "A minimal major mode for the Kurt language."
   ;; Comment syntax
   (setq-local comment-start ";")
   (setq-local comment-end "")
+  (when kurt-line-numbers
+    (display-line-numbers-mode 1))
 
   ;; Define keyword groups
   (defconst kurt-keywords-first

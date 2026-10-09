@@ -18,7 +18,7 @@ Install Kurt into a virtual environment with `pip install -e /path/to/kurt-lang`
 
 ## Emacs
 
-Put `kurt-mode.el` and `replacements.json` in the same directory on your load path, then add `(require 'kurt-mode)` to your configuration. The mode provides highlighting, comments, basic block indentation, and the same symbol replacements. When `kurt` is on `PATH`, the mode registers `kurt --lsp` with the built-in Eglot client and starts it automatically. Set `kurt-enable-eglot` to `nil` to disable that, or customize `kurt-lsp-command` when the executable has another path.
+Put `kurt-mode.el` and `replacements.json` in the same directory on your load path, then add `(require 'kurt-mode)` to your configuration. The mode provides highlighting, comments, basic block indentation, and the same symbol replacements. When `kurt` is on `PATH`, the mode registers `kurt --lsp` with the built-in Eglot client and starts it automatically. Set `kurt-enable-eglot` to `nil` to disable that, or customize `kurt-lsp-command` when the executable has another path. Line numbers are on, since the reasons refer to lines by number; set `kurt-line-numbers` to `nil` to turn them off.
 
 ## Vim and Neovim
 
