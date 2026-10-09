@@ -2,6 +2,10 @@
 (require 'json)
 (require 'subr-x) ;; for when-let
 
+(defconst kurt-mode-directory
+  (file-name-directory (or load-file-name buffer-file-name default-directory))
+  "The directory of kurt-mode.el, where replacements.json is.")
+
 (defgroup kurt nil
   "Editing Kurt proof files."
   :group 'languages)
@@ -94,8 +98,12 @@ Works when the user types a space or newline right after the command."
 (add-hook 'kurt-mode-hook #'kurt-load-replacements)
 (add-hook 'post-self-insert-hook #'kurt-check-and-replace)
 
+(defun kurt-lsp-contact (&optional _interactive)
+  "The command of the Kurt language server: `kurt-lsp-command' when Eglot starts it."
+  kurt-lsp-command)
+
 (with-eval-after-load 'eglot
-  (add-to-list 'eglot-server-programs `(kurt-mode . ,kurt-lsp-command)))
+  (add-to-list 'eglot-server-programs '(kurt-mode . kurt-lsp-contact)))
 
 (defun kurt-eglot-ensure ()
   "Start the Kurt language server when automatic Eglot support is enabled."
