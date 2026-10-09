@@ -10,7 +10,13 @@ function M.start()
   end
   local command = vim.g.kurt_server_path or 'kurt'
   if vim.fn.executable(command) ~= 1 then
-    return                                  -- (no `kurt`: highlighting only)
+    -- (once: highlighting works without it)
+    if not vim.g.kurt_warned_missing then
+      vim.g.kurt_warned_missing = true
+      vim.notify('Kurt: `' .. command .. '` not found -- no checking; set vim.g.kurt_server_path',
+                 vim.log.levels.WARN)
+    end
+    return
   end
   local cmd = { command }
   for _, argument in ipairs(vim.g.kurt_server_extra_args or {}) do
