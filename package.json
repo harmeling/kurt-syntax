@@ -3,7 +3,7 @@
     "displayName": "Kurt Syntax",
     "description": "Editor support for the Kurt proof language.",
     "version": "0.1.0",
-    "publisher": "Stefan Harmeling",
+    "publisher": "harmeling",
     "license": "MIT",
     "engines": {
         "vscode": "^1.99.0"
