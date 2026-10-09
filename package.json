@@ -2,7 +2,7 @@
     "name": "kurt-syntax",
     "displayName": "Kurt Syntax",
     "description": "Editor support for the Kurt proof language.",
-    "version": "0.1.0",
+    "version": "0.8.0",
     "publisher": "harmeling",
     "license": "MIT",
     "engines": {
@@ -22,7 +22,7 @@
         "vscode:prepublish": "npm run build",
         "check": "python3 scripts/check_editor_support.py",
         "package": "vsce package",
-        "install-extension": "code --install-extension kurt-syntax-0.1.0.vsix --force"
+        "install-extension": "code --install-extension kurt-syntax-0.8.0.vsix --force"
     },
     "main": "./out/extension.js",
     "activationEvents": [

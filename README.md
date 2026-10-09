@@ -1,6 +1,8 @@
 # Kurt editor support
 
-Editor support for the [Kurt proof language](https://www.kurt-lang.org), currently aligned with Kurt 0.7. Kurt is developed by Stefan Harmeling (TU Dortmund). In addition to highlighting and symbol replacement, the editors can start `kurt --lsp` for diagnostics, proof reasons, hover, and completion.
+Editor support for the [Kurt proof language](https://www.kurt-lang.org), aligned with Kurt 0.8. Kurt is developed by Stefan Harmeling (TU Dortmund). In addition to highlighting and symbol replacement, the editors can start `kurt --lsp` for diagnostics, proof reasons, hover, and completion.
+
+**Status: early, not completely tested.** The VS Code extension has been tried on macOS, Emacs (Eglot) and Neovim (0.10 or newer) briefly; expect rough edges, and please report what doesn't work. A check currently stops at the first error of a file, so the editors show one error at a time (the lines after it get no reasons until it is fixed).
 
 ## VS Code
 
@@ -14,7 +16,7 @@ Opening a Kurt file starts the language server. The extension looks for the exec
 
 The status bar shows whether the server is running and how many Kurt diagnostics are open. The Command Palette has actions to restart the server, check the current file, select an executable, show the Kurt version, and open the server output. Settings control trusted theory paths, strict mode, check-on-type, inlay hints, extra command arguments, and protocol tracing. Settings that change the server restart it automatically.
 
-Install Kurt into a virtual environment with `pip install -e /path/to/kurt-lang`, or install a released package with `pip install kurt-lang`. Kurt 0.7.6 supports the base protocol; the current Kurt development version adds live debounced checks, unsaved dependency buffers, portable Unicode positions, and these initialization settings.
+Install Kurt into a virtual environment with `pip install -e /path/to/kurt-lang`, or install a released package with `pip install kurt-lang`. Use Kurt 0.8.0 or newer: it has live debounced checks, unsaved dependency buffers, portable Unicode positions, these initialization settings, and the certificate on hover.
 
 ## Emacs
 
