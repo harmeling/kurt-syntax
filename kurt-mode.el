@@ -2,6 +2,20 @@
 (require 'json)
 (require 'subr-x) ;; for when-let
 
+(defgroup kurt nil
+  "Editing Kurt proof files."
+  :group 'languages)
+
+(defcustom kurt-enable-eglot t
+  "When non-nil, start Eglot automatically when the `kurt` executable is available."
+  :type 'boolean
+  :group 'kurt)
+
+(defcustom kurt-lsp-command '("kurt" "--lsp")
+  "Command used by Eglot to start the Kurt language server."
+  :type '(repeat string)
+  :group 'kurt)
+
 (define-derived-mode kurt-mode prog-mode "Kurt"
   "A minimal major mode for the Kurt language."
   ;; Comment syntax
@@ -10,15 +24,15 @@
 
   ;; Define keyword groups
   (defconst kurt-keywords-first
-    '("var" "const" "sort" "builtin" "infix" "postfix" "prefix"
-      "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "calc" "alias"))
+    '("var" "const" "infix" "postfix" "prefix"
+      "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "calc" "alias" "sort" "builtin"))
 
   (defconst kurt-keywords-second
     '("load" "save" "use" "assume" "case" "let" "pick" "with" "show" "def" "local" "proof"
-      "qed" "todo" "sandbox" "expect" "break"))
+      "qed" "todo" "sandbox" "expect" "break" "breakpoint"))
 
   (defconst kurt-keywords-third
-    '("help" "hint" "parse" "tokenize" "format" "summary" "syntax" "theory" "cert" "breakpoint" "true" "false"))
+    '("help" "hint" "parse" "tokenize" "format" "summary" "syntax" "theory" "list" "cert" "true" "false"))
 
   ;; Font-lock (syntax highlighting), could use font-lock-{keyword,builtin,constant}-face
   (setq-local font-lock-defaults
@@ -80,43 +94,17 @@ Works when the user types a space or newline right after the command."
 (add-hook 'kurt-mode-hook #'kurt-load-replacements)
 (add-hook 'post-self-insert-hook #'kurt-check-and-replace)
 
-;; Completion without the language server (`completion-at-point', M-TAB): keywords, the theories
-;; after `load', and the names and labels of this buffer; the lists are in completions.json,
-;; generated from kurt-lang
-(defvar kurt-completions nil "Keywords and theories, from completions.json.")
-
-(defun kurt-load-completions ()
-  (let ((file (expand-file-name "completions.json"
-                                (file-name-directory (or load-file-name (locate-library "kurt-mode"))))))
-    (when (file-readable-p file)
-      (setq kurt-completions (json-read-file file)))))
-
-(defun kurt-completion-at-point ()
-  "Complete a keyword, a theory after `load', or a name or label of this buffer."
-  (let* ((end (point))
-         (start (save-excursion (skip-chars-backward "^ \t\n()[]{},=\"") (point)))
-         (line (buffer-substring-no-properties (line-beginning-position) end))
-         (keywords (append (alist-get 'keywords kurt-completions) nil))
-         (theories (append (alist-get 'theories kurt-completions) nil))
-         (names '()))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "^\\s-*\\(?:const\\|var\\|bool\\|def\\|arity\\|let\\|pick\\)\\s-+\\([^;\n]+\\)" nil t)
-        (dolist (name (split-string (match-string 1) "[ ,=]+" t))
-          (when (string-match-p "\\`[$%]?[A-Za-z][A-Za-z0-9]*\\'" name) (push name names))))
-      (goto-char (point-min))
-      (while (re-search-forward "\"\\([^\"\n]+\\)\"" nil t) (push (match-string 1) names)))
-    (list start end (if (string-match-p "\\`\\s-*load\\b" line) theories (append keywords names)))))
-
-(add-hook 'kurt-mode-hook
-          (lambda ()
-            (unless kurt-completions (kurt-load-completions))
-            (add-hook 'completion-at-point-functions #'kurt-completion-at-point nil t)))
-
-;; Kurt's language server (`kurt --lsp'): `M-x eglot' in a .kurt file starts it -- errors and
-;; todos at their lines, the reason of each checked line, completion with the state at the cursor
 (with-eval-after-load 'eglot
-  (add-to-list 'eglot-server-programs '(kurt-mode . ("kurt" "--lsp"))))
+  (add-to-list 'eglot-server-programs `(kurt-mode . ,kurt-lsp-command)))
+
+(defun kurt-eglot-ensure ()
+  "Start the Kurt language server when automatic Eglot support is enabled."
+  (when (and kurt-enable-eglot
+             (executable-find (car kurt-lsp-command))
+             (require 'eglot nil t))
+    (eglot-ensure)))
+
+(add-hook 'kurt-mode-hook #'kurt-eglot-ensure)
 
 ;; Automatically use kurt-mode for .kurt files
 (add-to-list 'auto-mode-alist '("\\.kurt\\'" . kurt-mode))
@@ -124,4 +112,3 @@ Works when the user types a space or newline right after the command."
 (provide 'kurt-mode)
 
 ;;; kurt-mode.el ends here
-

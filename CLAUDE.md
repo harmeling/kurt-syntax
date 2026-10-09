@@ -12,8 +12,8 @@ text).
 
 ## Commands
 
-- Build (TypeScript → `out/`): `npm run build`
-- Watch/rebuild on change: `npm run watch`
+- Type-check and bundle TypeScript into `out/`: `npm run build`
+- Watch/rebundle on change: `npm run watch`
 - Package into a `.vsix`: `npm run package` (runs `vsce package`)
 - Package + install into local VS Code: `./install.sh`, or
   `npm run package && npm run install`
@@ -22,8 +22,8 @@ There is no test suite and no linter configured in this repo.
 
 ## Architecture
 
-- `extension/extension.ts` — the entire VS Code extension. On activation
-  it loads `replacements.json` and listens for document text changes; when
+- `extension/extension.ts` — the entire VS Code extension. It starts the Kurt language server,
+  registers its commands/settings/status, loads `replacements.json`, and listens for document text changes; when
   a `\word` sequence is immediately followed by a non-alphanumeric trigger
   character (space, newline, or punctuation), it replaces `\word` with the
   mapped string from `replacements.json`.
@@ -39,9 +39,7 @@ There is no test suite and no linter configured in this repo.
   TextMate grammar and language config that give VS Code syntax
   highlighting for `.kurt` files; wired up via the `contributes` section
   of `package.json`.
-- `package.json` `contributes.snippets` points at
-  `snippets/kurt-snippets.json`, which does not currently exist in the
-  repo — packaging/loading that references snippets will need that file
-  added or the reference removed.
+- `lua/kurt/lsp.lua` and `ftplugin/kurt.vim` start the built-in Neovim LSP client; `kurt-mode.el`
+  registers the server with Emacs Eglot.
 - `example.kurt` — a sample file in the language, useful as a reference
   when changing the grammar or macro set.

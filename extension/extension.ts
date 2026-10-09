@@ -1,145 +1,194 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
+import { execFile } from 'child_process';
+import {
+    LanguageClient,
+    LanguageClientOptions,
+    ServerOptions,
+    State,
+} from 'vscode-languageclient/node';
 
 let replacements: Record<string, string> = {};
 let client: LanguageClient | undefined;
+let output: vscode.OutputChannel;
+let status: vscode.StatusBarItem;
+let restartQueue: Promise<void> = Promise.resolve();
+let stateSubscription: vscode.Disposable | undefined;
 
-// Kurt's language server (`kurt --lsp`): errors and todos at their lines, the reason of each checked
-// line (an inlay hint and on hover), completion with the state at the cursor. Without it (Kurt not
-// installed, or switched off), the static completion below: keywords, theories, the names here.
-async function startServer(context: vscode.ExtensionContext): Promise<boolean> {
-    const config = vscode.workspace.getConfiguration('kurt.server');
-    if (!config.get<boolean>('enabled', true)) return false;
-    const [command, ...args] = config.get<string[]>('command', ['kurt', '--lsp']);
+function configuration(): vscode.WorkspaceConfiguration {
+    return vscode.workspace.getConfiguration('kurt');
+}
+
+function workspaceFolder(): vscode.WorkspaceFolder | undefined {
+    const document = vscode.window.activeTextEditor?.document;
+    return document ? vscode.workspace.getWorkspaceFolder(document.uri) : vscode.workspace.workspaceFolders?.[0];
+}
+
+function executable(): string {
+    const configured = configuration().get<string>('server.path', '').trim();
+    const folder = workspaceFolder();
+    if (configured) {
+        return path.isAbsolute(configured) || !folder ? configured : path.join(folder.uri.fsPath, configured);
+    }
+    if (vscode.workspace.isTrusted && folder) {
+        const local = process.platform === 'win32'
+            ? path.join(folder.uri.fsPath, '.venv', 'Scripts', 'kurt.exe')
+            : path.join(folder.uri.fsPath, '.venv', 'bin', 'kurt');
+        if (fs.existsSync(local)) return local;
+    }
+    return 'kurt';
+}
+
+function setStatus(text: string, tooltip: string, command = 'kurt.showServerOutput'): void {
+    status.text = text;
+    status.tooltip = tooltip;
+    status.command = command;
+    status.show();
+}
+
+function refreshProblemStatus(): void {
+    if (!client || client.state !== State.Running) return;
+    let problems = 0;
+    for (const document of vscode.workspace.textDocuments.filter(doc => doc.languageId === 'kurt')) {
+        problems += vscode.languages.getDiagnostics(document.uri).length;
+    }
+    setStatus(problems ? `Kurt: ${problems} problem${problems === 1 ? '' : 's'}` : 'Kurt $(check)',
+              problems ? 'Kurt diagnostics' : 'Kurt language server is running');
+}
+
+async function recoveryMessage(error: unknown): Promise<void> {
+    output.appendLine(`Unable to start Kurt: ${error instanceof Error ? error.message : String(error)}`);
+    setStatus('Kurt unavailable', 'Kurt language server did not start', 'kurt.selectExecutable');
+    const choice = await vscode.window.showErrorMessage(
+        'The Kurt language server could not start. Install Kurt or select its executable.',
+        'Select Executable', 'Setup', 'Show Output');
+    if (choice === 'Select Executable') await vscode.commands.executeCommand('kurt.selectExecutable');
+    if (choice === 'Setup') await vscode.env.openExternal(vscode.Uri.parse('https://www.kurt-lang.org'));
+    if (choice === 'Show Output') output.show(true);
+}
+
+async function startServer(): Promise<void> {
+    if (client) return;
+    const config = configuration();
+    const command = executable();
+    const args = [...config.get<string[]>('server.extraArgs', []), '--lsp'];
     const serverOptions: ServerOptions = { command, args };
-    const clientOptions: LanguageClientOptions = { documentSelector: [{ language: 'kurt' }] };
-    client = new LanguageClient('kurt', 'Kurt', serverOptions, clientOptions);
-    try {
-        await client.start();
-        return true;
-    } catch (err) {
-        client = undefined;
-        vscode.window.showInformationMessage(`Kurt's language server didn't start (${command}): only the static completion. Install Kurt (pip install kurt-lang) or set kurt.server.command.`);
-        return false;
-    }
-}
-
-function staticCompletion(context: vscode.ExtensionContext): vscode.Disposable {
-    let data = { keywords: [] as string[], theories: [] as string[] };
-    try { data = JSON.parse(fs.readFileSync(path.join(context.extensionPath, 'completions.json'), 'utf8')); } catch {}
-    return vscode.languages.registerCompletionItemProvider('kurt', {
-        provideCompletionItems(document, position) {
-            const before = document.lineAt(position.line).text.substring(0, position.character);
-            if (/^\s*load\b/.test(before)) {
-                return data.theories.map(t => new vscode.CompletionItem(t, vscode.CompletionItemKind.Module));
-            }
-            const text = document.getText();
-            const names = new Set<string>();
-            for (const m of text.matchAll(/^\s*(?:const|var|bool|def|arity|infix|prefix|postfix|bindop|let|pick)\s+([^;\n]+)/gm)) {
-                for (const name of m[1].split(/[\s,=]+/)) if (/^[$%]?[A-Za-z][A-Za-z0-9]*$/.test(name)) names.add(name);
-            }
-            const labels = new Set<string>([...text.matchAll(/"([^"\n]+)"/g)].map(m => m[1]));
-            return [
-                ...data.keywords.map(k => new vscode.CompletionItem(k, vscode.CompletionItemKind.Keyword)),
-                ...[...names].map(n => new vscode.CompletionItem(n, vscode.CompletionItemKind.Variable)),
-                ...[...labels].map(l => new vscode.CompletionItem(l, vscode.CompletionItemKind.Reference)),
-            ];
-        }
-    }, ' ', '"');
-}
-
-export async function activate(context: vscode.ExtensionContext) {
-    console.log('🔥 Kurt extension activated');
-
-    if (!(await startServer(context))) {
-        context.subscriptions.push(staticCompletion(context));
-    }
-
-    const replacementsPath = path.join(context.extensionPath, 'replacements.json');
-    try {
-        const jsonContent = fs.readFileSync(replacementsPath, 'utf8');
-        replacements = JSON.parse(jsonContent);
-        console.log('✅ Loaded replacements:', replacements);
-    } catch (err) {
-        console.error('❌ Failed to load replacements.json:', err);
-        replacements = {};
-    }
-
-    const disposable = vscode.workspace.onDidChangeTextDocument(event => {
-        try {
-            const editor = vscode.window.activeTextEditor;
-            if (!editor || event.document !== editor.document) return;
-            if (event.document.languageId !== 'kurt') return;
-
-            const changes = event.contentChanges;
-            if (changes.length === 0) return;
-
-            const change = changes[0];
-            const triggerChar = change.text;
-
-            // Ignore if it's not a single non-alphanumeric character
-            if (triggerChar.length !== 1 && triggerChar !== '\n') return;
-            if (/^[a-zA-Z0-9]$/.test(triggerChar)) return;
-
-            const doc = event.document;
-            const triggerPos = change.range.start;
-            const lineText = doc.lineAt(triggerPos.line).text;
-            const charIndex = triggerPos.character;
-
-            const textBefore = lineText.substring(0, charIndex);
-
-            const match = textBefore.match(/(\\[a-zA-Z]+)$/);
-            if (match) {
-                const matchedCommand = match[1];
-                const replacement = replacements[matchedCommand];
-
-                if (replacement) {
-                    const matchStart = charIndex - matchedCommand.length;
-                    const startPos = new vscode.Position(triggerPos.line, matchStart);
-                    let endPos: vscode.Position;
-
-                    if (triggerChar === ' ') {
-                        // Remove the space
-                        endPos = new vscode.Position(triggerPos.line, charIndex + 1);
-                    } else if (triggerChar === '\n') {
-                        // Remove the newline
-                        endPos = new vscode.Position(triggerPos.line + 1, 0);
-                    } else {
-                        // Keep punctuation etc.
-                        endPos = new vscode.Position(triggerPos.line, charIndex);
-                    }
-
-                    const range = new vscode.Range(startPos, endPos);
-                    const finalText = replacement;
-
-                    console.log(`✅ Replacing "${matchedCommand}" triggered by "${triggerChar === '\n' ? '\\n' : triggerChar}" with "${finalText}"`);
-
-                    setTimeout(() => {
-                        editor.edit(editBuilder => {
-                            editBuilder.replace(range, finalText);
-                        }).then(success => {
-                            if (!success) {
-                                console.error('❌ Edit failed');
-                            } else if (triggerChar === '\n') {
-                                // Manually insert newline after replacement
-                                editor.insertSnippet(new vscode.SnippetString('\n'), editor.selection.active);
-                            } else {
-                                console.log('✅ Replacement succeeded');
-                            }
-                        });
-                    }, 0);
-                }
-            }
-        } catch (err) {
-            console.error('❌ Extension error:', err);
+    const clientOptions: LanguageClientOptions = {
+        documentSelector: [{ scheme: 'file', language: 'kurt' }, { scheme: 'untitled', language: 'kurt' }],
+        outputChannel: output,
+        initializationOptions: {
+            theoryPaths: config.get<string[]>('server.theoryPaths', []),
+            strict: config.get<boolean>('server.strict', false),
+            checkOnType: config.get<boolean>('checkOnType', true),
+        },
+        middleware: {
+            provideInlayHints: (document, range, token, next) =>
+                configuration().get<boolean>('inlayHints.enabled', true)
+                    ? next(document, range, token)
+                    : null,
+        },
+    };
+    const next = new LanguageClient('kurt', 'Kurt Language Server', serverOptions, clientOptions);
+    client = next;
+    stateSubscription = next.onDidChangeState(event => {
+        if (event.newState === State.Starting) setStatus('Kurt: starting…', `${command} ${args.join(' ')}`);
+        if (event.newState === State.Running) refreshProblemStatus();
+        if (event.newState === State.Stopped && client === next) {
+            setStatus('Kurt unavailable', 'Kurt language server stopped', 'kurt.restartServer');
         }
     });
-
-    context.subscriptions.push(disposable);
+    try {
+        await next.start();
+    } catch (error) {
+        if (client === next) client = undefined;
+        await recoveryMessage(error);
+    }
 }
 
-export function deactivate(): Thenable<void> | undefined {
-    return client?.stop();
+async function stopServer(): Promise<void> {
+    const old = client;
+    client = undefined;
+    stateSubscription?.dispose();
+    stateSubscription = undefined;
+    if (old) await old.stop();
+}
+
+async function restartServer(): Promise<void> {
+    setStatus('Kurt: restarting…', 'Restarting Kurt language server');
+    await stopServer();
+    await startServer();
+}
+
+function queueRestart(): Promise<void> {
+    restartQueue = restartQueue.then(restartServer, restartServer);
+    return restartQueue;
+}
+
+function registerReplacements(context: vscode.ExtensionContext): void {
+    try {
+        replacements = JSON.parse(fs.readFileSync(path.join(context.extensionPath, 'replacements.json'), 'utf8'));
+    } catch (error) {
+        output.appendLine(`Could not load replacements.json: ${String(error)}`);
+    }
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || event.document !== editor.document || event.document.languageId !== 'kurt') return;
+        const change = event.contentChanges[0];
+        if (!change || (change.text.length !== 1 && change.text !== '\n') || /^[a-zA-Z0-9]$/.test(change.text)) return;
+        const trigger = change.range.start;
+        const before = event.document.lineAt(trigger.line).text.substring(0, trigger.character);
+        const match = before.match(/(\\[a-zA-Z]+)$/);
+        if (!match || !replacements[match[1]]) return;
+        const start = new vscode.Position(trigger.line, trigger.character - match[1].length);
+        const end = change.text === ' ' ? new vscode.Position(trigger.line, trigger.character + 1)
+            : change.text === '\n' ? new vscode.Position(trigger.line + 1, 0) : trigger;
+        setTimeout(async () => {
+            const changed = await editor.edit(builder => builder.replace(new vscode.Range(start, end), replacements[match[1]]));
+            if (changed && change.text === '\n') await editor.insertSnippet(new vscode.SnippetString('\n'), editor.selection.active);
+        }, 0);
+    }));
+}
+
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    output = vscode.window.createOutputChannel('Kurt Language Server');
+    status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 20);
+    context.subscriptions.push(output, status);
+    registerReplacements(context);
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('kurt.restartServer', queueRestart),
+        vscode.commands.registerCommand('kurt.showServerOutput', () => output.show(true)),
+        vscode.commands.registerCommand('kurt.selectExecutable', async () => {
+            const selected = await vscode.window.showOpenDialog({ canSelectMany: false, openLabel: 'Select Kurt executable' });
+            if (!selected?.[0]) return;
+            await configuration().update('server.path', selected[0].fsPath,
+                workspaceFolder() ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global);
+        }),
+        vscode.commands.registerCommand('kurt.checkCurrentFile', async () => {
+            const document = vscode.window.activeTextEditor?.document;
+            if (!document || document.languageId !== 'kurt' || !client) return;
+            setStatus('Kurt: checking…', 'Checking current Kurt file');
+            await client.sendRequest('kurt/check', { textDocument: { uri: document.uri.toString() } });
+            refreshProblemStatus();
+        }),
+        vscode.commands.registerCommand('kurt.showVersion', () => {
+            execFile(executable(), ['--version'], (error, stdout, stderr) => {
+                const message = error ? stderr || error.message : stdout.trim();
+                if (error) output.appendLine(message);
+                void vscode.window.showInformationMessage(error ? `Kurt: ${message}` : message);
+            });
+        }),
+        vscode.languages.onDidChangeDiagnostics(refreshProblemStatus),
+        vscode.workspace.onDidChangeConfiguration(event => {
+            if (event.affectsConfiguration('kurt.server') || event.affectsConfiguration('kurt.checkOnType')) {
+                void queueRestart();
+            }
+        }),
+    );
+    await startServer();
+}
+
+export async function deactivate(): Promise<void> {
+    await stopServer();
 }

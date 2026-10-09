@@ -16,11 +16,13 @@
         "url": "https://github.com/harmeling/kurt-syntax.git"
     },
     "scripts": {
-        "build": "tsc",
-        "watch": "tsc --watch",
+        "check-types": "tsc --noEmit",
+        "build": "npm run check-types && esbuild extension/extension.ts --bundle --external:vscode --platform=node --format=cjs --outfile=out/extension.js",
+        "watch": "esbuild extension/extension.ts --bundle --external:vscode --platform=node --format=cjs --outfile=out/extension.js --watch",
+        "vscode:prepublish": "npm run build",
         "check": "python3 scripts/check_editor_support.py",
         "package": "vsce package",
-        "install": "code --install-extension kurt-syntax-0.1.0.vsix --force"
+        "install-extension": "code --install-extension kurt-syntax-0.1.0.vsix --force"
     },
     "main": "./out/extension.js",
     "activationEvents": [
@@ -60,34 +62,68 @@
                 "path": "./snippets/kurt-snippets.json"
             }
         ],
+        "commands": [
+            { "command": "kurt.restartServer", "title": "Kurt: Restart Language Server" },
+            { "command": "kurt.showServerOutput", "title": "Kurt: Show Server Output" },
+            { "command": "kurt.selectExecutable", "title": "Kurt: Select Kurt Executable" },
+            { "command": "kurt.checkCurrentFile", "title": "Kurt: Check Current File" },
+            { "command": "kurt.showVersion", "title": "Kurt: Show Version" }
+        ],
         "configuration": {
             "title": "Kurt",
             "properties": {
-                "kurt.server.enabled": {
+                "kurt.server.path": {
+                    "type": "string",
+                    "default": "",
+                    "restricted": true,
+                    "description": "Path to the Kurt executable. Empty discovers .venv/bin/kurt and then kurt on PATH."
+                },
+                "kurt.server.extraArgs": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "default": [],
+                    "restricted": true,
+                    "description": "Additional arguments placed before --lsp."
+                },
+                "kurt.server.theoryPaths": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "default": [],
+                    "restricted": true,
+                    "description": "Additional trusted theory directories."
+                },
+                "kurt.server.strict": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Check documents in strict mode."
+                },
+                "kurt.checkOnType": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Use Kurt's language server (`kurt --lsp`): errors and todos at their lines, the reason of each checked line, completion with the state at the cursor."
+                    "description": "Check after edits with a short debounce. Open and save are always checked."
                 },
-                "kurt.server.command": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "default": [
-                        "kurt",
-                        "--lsp"
-                    ],
-                    "description": "How to start the language server, e.g. [\"python3\", \"-m\", \"kurt\", \"--lsp\"] or [\"python3\", \"/path/to/kurt.py\", \"--lsp\"]."
+                "kurt.inlayHints.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show proof reasons as inlay hints."
+                },
+                "kurt.trace.server": {
+                    "type": "string",
+                    "enum": ["off", "messages", "verbose"],
+                    "default": "off",
+                    "scope": "window",
+                    "description": "Trace communication with the Kurt language server."
                 }
             }
         }
     },
+    "dependencies": {
+        "vscode-languageclient": "^9.0.1"
+    },
     "devDependencies": {
         "@types/node": "^22.14.1",
         "@types/vscode": "^1.99.1",
+        "esbuild": "^0.25.10",
         "typescript": "^5.8.3"
-    },
-    "dependencies": {
-        "vscode-languageclient": "^9.0.1"
     }
 }

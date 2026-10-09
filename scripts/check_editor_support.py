@@ -2,10 +2,14 @@
 """Check that every lightweight editor definition covers Kurt's current commands."""
 from __future__ import annotations
 import ast, json, re
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LANG = ROOT.parent / "kurt-lang" / "src" / "kurt" / "kurt.py"
+configured = os.environ.get("KURT_LANG_PATH")
+candidates = ([Path(configured)] if configured else []) + [ROOT.parent / "kurt-lang", ROOT.parent / "kurt-lang-dev"]
+LANG_ROOT = next((path for path in candidates if (path / "src/kurt/kurt.py").is_file()), candidates[0])
+LANG = LANG_ROOT / "src" / "kurt" / "kurt.py"
 HELPER = {"with"}
 CONSTANTS = {"true", "false"}
 
