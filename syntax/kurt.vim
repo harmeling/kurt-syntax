@@ -1,5 +1,5 @@
 if exists("b:current_syntax") | finish | endif
-syn keyword kurtDeclaration var const infix postfix prefix brackets arity bindop chain flat sym bool calc alias sort
+syn keyword kurtDeclaration var const infix postfix prefix brackets arity bindop chain flat sym bool calc alias sort builtin
 syn keyword kurtProof load save use show def local proof qed todo assume case let pick with sandbox expect break
 syn keyword kurtInspection help hint parse tokenize format summary syntax theory cert list breakpoint
 syn keyword kurtConstant true false

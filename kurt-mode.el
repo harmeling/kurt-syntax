@@ -10,7 +10,7 @@
 
   ;; Define keyword groups
   (defconst kurt-keywords-first
-    '("var" "const" "sort" "infix" "postfix" "prefix"
+    '("var" "const" "sort" "builtin" "infix" "postfix" "prefix"
       "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "calc" "alias"))
 
   (defconst kurt-keywords-second
