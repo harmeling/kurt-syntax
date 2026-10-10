@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 configured = os.environ.get("KURT_LANG_PATH")
-candidates = ([Path(configured)] if configured else []) + [ROOT.parent / "kurt-lang", ROOT.parent / "kurt-lang-dev"]
+candidates = ([Path(configured)] if configured else []) + [ROOT.parent / "kurt-lang-dev", ROOT.parent / "kurt-lang"]
 LANG_ROOT = next((path for path in candidates if (path / "src/kurt/kurt.py").is_file()), candidates[0])
 LANG = LANG_ROOT / "src" / "kurt"
 

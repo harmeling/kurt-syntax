@@ -84,5 +84,5 @@ released and GitHub sends an email; fix them, then press the button. The extensi
 version numbers.
 
 `python3 scripts/check_editor_support.py` compares all three editor definitions with a Kurt
-checkout (`KURT_LANG_PATH`, else `../kurt-lang` or `../kurt-lang-dev`) and fails if a current
+checkout (`KURT_LANG_PATH`, else `../kurt-lang-dev` or `../kurt-lang`) and fails if a current
 command is missing.
