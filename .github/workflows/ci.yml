@@ -6,10 +6,9 @@ on:
 
 env:
   # scripts/check_editor_support.py and generate_completions.py read Kurt's current keywords from
-  # here. Deliberately the private, ahead-of-release kurt-lang-dev, not the public kurt-lang
-  # mirror: the mirror lags behind by design (it only moves on a publish), so checking against it
-  # would flag every keyword added since the last release as "missing" from the editor support.
-  KURT_LANG_PATH: ${{ github.workspace }}/kurt-lang-dev
+  # here: the public, released harmeling/kurt-lang -- that is what a user who installs the
+  # extension actually has, not the private, ahead-of-release kurt-lang-dev.
+  KURT_LANG_PATH: ${{ github.workspace }}/kurt-lang
 
 jobs:
   test:
@@ -17,15 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # harmeling/kurt-lang-dev is private: a fine-grained PAT (Contents: Read-only, scoped to
-      # just that repository) as the secret KURT_LANG_DEV_PAT -- the default GITHUB_TOKEN can
-      # only read the repository the workflow itself runs in.
-      - name: Check out kurt-lang-dev (for scripts/check_editor_support.py)
+      - name: Check out kurt-lang (for scripts/check_editor_support.py)
         uses: actions/checkout@v4
         with:
-          repository: harmeling/kurt-lang-dev
-          path: kurt-lang-dev
-          token: ${{ secrets.KURT_LANG_DEV_PAT }}
+          repository: harmeling/kurt-lang
+          path: kurt-lang
 
       - uses: actions/setup-node@v4
         with:
