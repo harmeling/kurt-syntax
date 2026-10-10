@@ -29,7 +29,7 @@ echo "Kurt $tag"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-git clone -q --depth 1 --branch "$tag" "https://github.com/$repo.git" "$tmp/kurt-lang"
+git -c advice.detachedHead=false clone -q --depth 1 --branch "$tag" "https://github.com/$repo.git" "$tmp/kurt-lang"
 curl -fsSL -o "$tmp/kurt.py" "https://github.com/$repo/releases/download/$tag/kurt.py"
 
 # the keywords and the bundled Kurt of that release
