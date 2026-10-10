@@ -2,7 +2,7 @@
 
 Editor support for the [Kurt proof language](https://www.kurt-lang.org), aligned with Kurt 0.8. Kurt is developed by Stefan Harmeling (TU Dortmund). In addition to highlighting and symbol replacement, the editors can start `kurt --lsp` for diagnostics, proof reasons, hover, and completion.
 
-**Status: early, not completely tested.** The VS Code extension has been tried on macOS, Emacs (Eglot) and Neovim (0.10 or newer) briefly; expect rough edges, and please report what doesn't work. A check currently stops at the first error of a file, so the editors show one error at a time (the lines after it get no reasons until it is fixed).
+**Status: early, not completely tested.** The VS Code extension has been tried on macOS, Emacs (Eglot) and Neovim (0.10 or newer) briefly; expect rough edges, and please report what doesn't work. With Kurt 0.8.1 or newer, the editors show all errors of a file: checking goes on after an error (the setting `kurt.allErrors` in VS Code, `vim.g.kurt_all_errors` in Neovim, turns it off); with 0.8.0, only the first.
 
 ## VS Code
 
@@ -35,6 +35,7 @@ vim.g.kurt_theory_paths = { '/path/to/trusted/theories' }
 vim.g.kurt_strict = false
 vim.g.kurt_check_on_type = true
 vim.g.kurt_inlay_hints = true   -- the reasons at the ends of the lines
+vim.g.kurt_all_errors = true    -- all errors of a file, not only the first
 vim.g.kurt_line_numbers = 1     -- (also in Vim)
 ```
 

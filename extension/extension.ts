@@ -83,6 +83,7 @@ async function startServer(): Promise<void> {
             theoryPaths: config.get<string[]>('server.theoryPaths', []),
             strict: config.get<boolean>('server.strict', false),
             checkOnType: config.get<boolean>('checkOnType', true),
+            allErrors: config.get<boolean>('allErrors', true),
         },
         middleware: {
             // the reasons are drawn by `refreshReasons` (aligned at a column), not as inlay hints
@@ -252,7 +253,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }),
         vscode.window.onDidChangeVisibleTextEditors(scheduleReasons),
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('kurt.server') || event.affectsConfiguration('kurt.checkOnType')) {
+            if (event.affectsConfiguration('kurt.server') || event.affectsConfiguration('kurt.checkOnType') || event.affectsConfiguration('kurt.allErrors')) {
                 void queueRestart();
             }
             if (event.affectsConfiguration('kurt.inlayHints') || event.affectsConfiguration('kurt.reasons')) {

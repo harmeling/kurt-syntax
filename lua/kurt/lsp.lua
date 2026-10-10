@@ -35,6 +35,7 @@ function M.start()
       theoryPaths = vim.g.kurt_theory_paths or {},
       strict = vim.g.kurt_strict == true,
       checkOnType = vim.g.kurt_check_on_type ~= false,
+      allErrors = vim.g.kurt_all_errors ~= false,
     },
     on_attach = function(_, bufnr)
       if vim.g.kurt_inlay_hints ~= false and vim.lsp.inlay_hint then

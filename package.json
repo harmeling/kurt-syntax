@@ -107,6 +107,11 @@
                     "default": true,
                     "description": "Check after edits with a short debounce. Open and save are always checked."
                 },
+                "kurt.allErrors": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show all errors of a file: checking goes on after an error (Kurt 0.8.1 or newer). Off: only the first error, as `kurt` on the command line."
+                },
                 "kurt.inlayHints.enabled": {
                     "type": "boolean",
                     "default": true,
