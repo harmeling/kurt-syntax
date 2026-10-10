@@ -2,6 +2,12 @@
 
 The extension has its own version numbers; each release says which Kurt it comes with.
 
+## 0.8.3
+
+- The ID is `harmeling.kurt` again (0.8.2 was `harmeling.kurt-lang`: uninstall that one). Until it
+  is on the VS Code Marketplace, install `kurt.vsix` from the GitHub release with `code
+  --install-extension kurt.vsix`.
+
 ## 0.8.2
 
 - The extension's ID is now `harmeling.kurt-lang` (as the Python package `kurt-lang`): the

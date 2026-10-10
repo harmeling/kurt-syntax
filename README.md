@@ -17,11 +17,16 @@ work at <https://github.com/harmeling/kurt-syntax/issues>.
 
 ## VS Code
 
-Install it in VS Code: the Extensions view (Cmd+Shift+X, or Ctrl+Shift+X), search for **Kurt**,
-install "Kurt" by harmeling; or on the command line: `code --install-extension harmeling.kurt-lang`
-([its page on the Marketplace](https://marketplace.visualstudio.com/items?itemName=harmeling.kurt-lang)).
-Open a `.kurt` file: it is checked right away. (Each version is also a `kurt.vsix` in the
-[releases](https://github.com/harmeling/kurt-syntax/releases).)
+Install it from the command line (the extension `harmeling.kurt`, the file `kurt.vsix` of the
+[latest release](https://github.com/harmeling/kurt-syntax/releases/latest)):
+
+```sh
+curl -LO https://github.com/harmeling/kurt-syntax/releases/latest/download/kurt.vsix
+code --install-extension kurt.vsix
+```
+
+Open a `.kurt` file: it is checked right away. (Not yet on the VS Code Marketplace; then also:
+search for **Kurt** in the Extensions view.)
 
 The Marketplace shows `extension/README.md`, a shorter version of this section.
 

@@ -1,8 +1,8 @@
 {
-    "name": "kurt-lang",
+    "name": "kurt",
     "displayName": "Kurt",
     "description": "The Kurt proof language: each line of a proof checked as you type, with its reason, errors and todos at their lines, completion, and hover with the certificate.",
-    "version": "0.8.2",
+    "version": "0.8.3",
     "publisher": "harmeling",
     "license": "MIT",
     "icon": "images/icon.png",
@@ -33,7 +33,7 @@
         "vscode:prepublish": "npm run build",
         "check": "python3 scripts/check_editor_support.py",
         "package": "vsce package --readme-path extension/README.md",
-        "install-extension": "code --install-extension kurt-lang-$npm_package_version.vsix --force"
+        "install-extension": "code --install-extension kurt-$npm_package_version.vsix --force"
     },
     "main": "./out/extension.js",
     "activationEvents": [
