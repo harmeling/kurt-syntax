@@ -5,7 +5,8 @@ name: Release
 # and Open VSX (job `publish-openvsx`) -- the latter two only once switched on (GitHub: Settings,
 # Secrets and variables, Actions: Variables `PUBLISH_MARKETPLACE` / `PUBLISH_OPENVSX` = `true`,
 # and Secrets `VSCE_PAT` / `OVSX_PAT`). By hand, for a tag that exists already: Actions, Release,
-# Run workflow, with the tag.
+# Run workflow, with the tag. A tag can also come from auto-sync.yml, triggered by a kurt-lang
+# release -- this file doesn't need to know that; it just reacts to the tag either way.
 
 on:
   push:
