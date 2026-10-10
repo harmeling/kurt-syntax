@@ -36,14 +36,14 @@
   ;; Define keyword groups
   (defconst kurt-keywords-first
     '("var" "const" "infix" "postfix" "prefix"
-      "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "calc" "alias"))
+      "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "calc" "alias" "sort" "builtin"))
 
   (defconst kurt-keywords-second
     '("load" "save" "use" "assume" "case" "let" "pick" "with" "show" "def" "local" "proof"
       "qed" "todo" "sandbox" "expect" "break" "breakpoint"))
 
   (defconst kurt-keywords-third
-    '("help" "hint" "parse" "tokenize" "format" "syntax" "theory" "list" "level" "mode" "context" "trail" "cert" "true" "false"))
+    '("help" "hint" "parse" "tokenize" "format" "summary" "syntax" "theory" "list" "cert" "true" "false"))
 
   ;; Font-lock (syntax highlighting), could use font-lock-{keyword,builtin,constant}-face
   (setq-local font-lock-defaults
