@@ -4,17 +4,21 @@ on:
   push:
   pull_request:
 
+env:
+  # scripts/check_editor_support.py and generate_completions.py read Kurt's keywords from here
+  KURT_LANG_PATH: ${{ github.workspace }}/kurt-lang-dev
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check out kurt-lang-dev (next to this checkout, for scripts/check_editor_support.py)
+      - name: Check out kurt-lang-dev (for scripts/check_editor_support.py)
         uses: actions/checkout@v4
         with:
           repository: harmeling/kurt-lang-dev
-          path: ../kurt-lang-dev
+          path: kurt-lang-dev
 
       - uses: actions/setup-node@v4
         with:
