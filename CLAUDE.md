@@ -14,7 +14,7 @@ text).
 
 - Type-check and bundle TypeScript into `out/`: `npm run build`
 - Watch/rebundle on change: `npm run watch`
-- Package into a `.vsix`: `npm run package` (runs `vsce package`)
+- Package into a `.vsix`: `npm run package` (runs `vsce package`; the Marketplace page is `extension/README.md`, not `README.md`)
 - Package + install into local VS Code: `./install.sh`, or
   `npm run package && npm run install`
 

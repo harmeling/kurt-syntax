@@ -32,7 +32,7 @@
         "watch": "esbuild extension/extension.ts --bundle --external:vscode --platform=node --format=cjs --outfile=out/extension.js --watch",
         "vscode:prepublish": "npm run build",
         "check": "python3 scripts/check_editor_support.py",
-        "package": "vsce package",
+        "package": "vsce package --readme-path extension/README.md",
         "install-extension": "code --install-extension kurt-0.8.1.vsix --force"
     },
     "main": "./out/extension.js",

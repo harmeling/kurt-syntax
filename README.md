@@ -17,9 +17,13 @@ work at <https://github.com/harmeling/kurt-syntax/issues>.
 
 ## VS Code
 
-Install **Kurt** (`harmeling.kurt`) from the Extensions view, or download `kurt.vsix` from the
-[latest release](https://github.com/harmeling/kurt-syntax/releases/latest) and install it with
-`code --install-extension kurt.vsix`. Open a `.kurt` file: it is checked right away.
+Install it in VS Code: the Extensions view (Cmd+Shift+X, or Ctrl+Shift+X), search for **Kurt**,
+install "Kurt" by harmeling; or on the command line: `code --install-extension harmeling.kurt`
+([its page on the Marketplace](https://marketplace.visualstudio.com/items?itemName=harmeling.kurt)).
+Open a `.kurt` file: it is checked right away. (Each version is also a `kurt.vsix` in the
+[releases](https://github.com/harmeling/kurt-syntax/releases).)
+
+The Marketplace shows `extension/README.md`, a shorter version of this section.
 
 **Which Kurt runs.** The extension comes with Kurt (the single file `kurt.py`, run with Python 3.10
 or newer -- only Python has to be installed). An installed Kurt is used first, if there is one:

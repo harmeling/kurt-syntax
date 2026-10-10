@@ -20,3 +20,4 @@ out/*.map
 **/__pycache__/**
 package-lock.json
 .github/**
+README.md
