@@ -2,7 +2,7 @@
 
 The extension has its own version numbers; each release says which Kurt it comes with.
 
-## 0.8.0
+## 0.8.1
 
 - The extension is now **Kurt** (`harmeling.kurt`), formerly "Kurt Syntax".
 - It comes with Kurt 0.8.0 (`kurt.py`, run with Python 3.10 or newer) and uses it when no Kurt is
