@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out kurt-lang-dev (next to this checkout, for scripts/check_editor_support.py)
+        uses: actions/checkout@v4
+        with:
+          repository: harmeling/kurt-lang-dev
+          path: ../kurt-lang-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm ci
+
+      - name: Build (type-check, then bundle the extension)
+        run: npm run build
+
+      - name: Check that the editors cover Kurt's current keywords
+        run: npm run check
+
+      - name: Package the .vsix (packaging must succeed; the result is not published)
+        run: npx vsce package --out /tmp/kurt-syntax-ci.vsix

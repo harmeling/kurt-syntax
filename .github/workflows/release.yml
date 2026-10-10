@@ -1,0 +1,141 @@
+name: Release
+
+# when a version tag (`v0.1.0`, ...) is pushed: a GitHub release with the packaged `.vsix`
+# (job `github-release`), and the extension on the VS Code Marketplace (job `publish-marketplace`)
+# and Open VSX (job `publish-openvsx`) -- the latter two only once switched on (GitHub: Settings,
+# Secrets and variables, Actions: Variables `PUBLISH_MARKETPLACE` / `PUBLISH_OPENVSX` = `true`,
+# and Secrets `VSCE_PAT` / `OVSX_PAT`). By hand, for a tag that exists already: Actions, Release,
+# Run workflow, with the tag.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "the version tag, e.g. v0.1.0"
+        required: true
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  verify:
+    # before anything is packaged: the tag is the version in package.json, and the extension
+    # builds and passes its checks against the released kurt-lang-dev
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Check out kurt-lang-dev (next to this checkout, for scripts/check_editor_support.py)
+        uses: actions/checkout@v4
+        with:
+          repository: harmeling/kurt-lang-dev
+          path: ../kurt-lang-dev
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: The tag is the version in package.json
+        run: |
+          version=$(node -p "require('./package.json').version")
+          test "v$version" = "$TAG" || { echo "tag $TAG, but package.json says $version"; exit 1; }
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run check
+
+  package:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm ci
+      - run: npx vsce package --out kurt-syntax.vsix
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kurt-syntax-vsix
+          path: kurt-syntax.vsix
+
+  publish-marketplace:
+    needs: package
+    # makes the extension public on the VS Code Marketplace
+    if: vars.PUBLISH_MARKETPLACE == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: kurt-syntax-vsix
+
+      - run: npx vsce publish --packagePath kurt-syntax.vsix --pat "$VSCE_PAT"
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+  publish-openvsx:
+    needs: package
+    # makes the extension public on Open VSX (VSCodium, Gitpod, Theia, ...)
+    if: vars.PUBLISH_OPENVSX == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: kurt-syntax-vsix
+
+      - run: npx ovsx publish kurt-syntax.vsix --pat "$OVSX_PAT"
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+  github-release:
+    needs: package
+    # the .vsix attached to a GitHub release, independent of the Marketplace/Open VSX -- so
+    # `.../releases/latest/download/kurt-syntax.vsix` is a stable link for manual installation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: kurt-syntax-vsix
+
+      - name: Create the release with kurt-syntax.vsix (or update the file of an existing one)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" kurt-syntax.vsix --clobber
+          else
+            gh release create "$TAG" kurt-syntax.vsix --title "Kurt Syntax ${TAG#v}" --generate-notes
+          fi
