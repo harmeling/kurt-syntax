@@ -1,22 +1,46 @@
-# Kurt editor support
+# Kurt for VS Code, Emacs and Vim
 
-Editor support for the [Kurt proof language](https://www.kurt-lang.org), aligned with Kurt 0.8. Kurt is developed by Stefan Harmeling (TU Dortmund). In addition to highlighting and symbol replacement, the editors can start `kurt --lsp` for diagnostics, proof reasons, hover, and completion.
+Editor support for [Kurt](https://www.kurt-lang.org), a small language for writing mathematical
+proofs the way people write them, with a checker that tells you right away, line by line, whether
+each step follows -- made for students learning to prove things. Kurt is developed by Stefan
+Harmeling (TU Dortmund).
 
-**Status: early, not completely tested.** The VS Code extension has been tried on macOS, Emacs (Eglot) and Neovim (0.10 or newer) briefly; expect rough edges, and please report what doesn't work. With Kurt 0.8.1 or newer, the editors show all errors of a file: checking goes on after an error (the setting `kurt.allErrors` in VS Code, `vim.g.kurt_all_errors` in Neovim, turns it off); with 0.8.0, only the first.
+- each line of a proof is checked as you type, and its reason appears at its end (`; by 3(4)`)
+- errors and `todo`s are marked at their lines -- all errors of a file, not only the first
+- hover shows the certificate of a line, with links to the lines it uses
+- completion knows the state at the cursor: in a proof, its goal; after `load`, the theories
+- highlighting, snippets, and LaTeX-style input (`\forall` → `∀`)
+
+**Status: early, not completely tested.** The VS Code extension has been tried on macOS, Emacs
+(Eglot) and Neovim (0.10 or newer) briefly; expect rough edges, and please report what doesn't
+work at <https://github.com/harmeling/kurt-syntax/issues>.
 
 ## VS Code
 
-Run `npm install`, then `npm run build` or `npm run package`. Install the resulting VSIX, or use **Run Extension** from this repository in VS Code. The extension provides `.kurt` highlighting, snippets, comments, bracket handling, and LaTeX-style symbol replacement such as `\\forall` → `∀`.
+Install **Kurt** (`harmeling.kurt`) from the Extensions view, or download `kurt.vsix` from the
+[latest release](https://github.com/harmeling/kurt-syntax/releases/latest) and install it with
+`code --install-extension kurt.vsix`. Open a `.kurt` file: it is checked right away.
 
-Opening a Kurt file starts the language server. The extension looks for the executable in this order:
+**Which Kurt runs.** The extension comes with Kurt (the single file `kurt.py`, run with Python 3.10
+or newer -- only Python has to be installed). An installed Kurt is used first, if there is one:
 
-1. `kurt.server.path`;
-2. `.venv/bin/kurt` in a trusted workspace (`.venv\\Scripts\\kurt.exe` on Windows);
-3. `kurt` on `PATH`.
+1. the setting `kurt.server.path`;
+2. `.venv/bin/kurt` in a trusted workspace (`.venv\Scripts\kurt.exe` on Windows);
+3. `kurt` on `PATH` (e.g. after `pip install kurt-lang`);
+4. else the `kurt.py` that comes with the extension, with `python3` (`py -3` on Windows; the
+   setting `kurt.server.python` names another one).
 
-The status bar shows whether the server is running and how many Kurt diagnostics are open. The Command Palette has actions to restart the server, check the current file, select an executable, show the Kurt version, and open the server output. Settings control trusted theory paths, strict mode, check-on-type, inlay hints, extra command arguments, and protocol tracing. Settings that change the server restart it automatically.
+`kurt.server.importStrategy` = `useBundled` takes the extension's own Kurt first. **Kurt: Show
+Version** says which Kurt runs. The extension is updated with each release of Kurt.
 
-Install Kurt into a virtual environment with `pip install -e /path/to/kurt-lang`, or install a released package with `pip install kurt-lang`. Use Kurt 0.8.0 or newer: it has live debounced checks, unsaved dependency buffers, portable Unicode positions, these initialization settings, and the certificate on hover.
+The status bar shows whether the server is running and how many Kurt diagnostics are open. The
+Command Palette has actions to restart the server, check the current file, select an executable,
+show the Kurt version, and open the server output. Settings control trusted theory paths, strict
+mode, all errors (`kurt.allErrors`; off: only the first, as `kurt` on the command line),
+check-on-type, the reasons (`kurt.inlayHints.enabled`, `kurt.reasons.column`), extra command
+arguments, and protocol tracing. Settings that change the server restart it automatically.
+
+To build it yourself: `npm install`, then `npm run package`.
 
 ## Emacs
 
@@ -49,4 +73,16 @@ Classic Vim continues to use the syntax and filetype support without LSP.
 
 ## Keeping pace with Kurt
 
-`python3 scripts/check_editor_support.py` compares all three editor definitions with an adjacent `../kurt-lang` or `../kurt-lang-dev` checkout and fails if a current command is missing. Set `KURT_LANG_PATH` for another location. Run it after changing Kurt's `keywords` dictionary.
+Every day, and on its "Run workflow" button (Actions, **Sync with Kurt**), the workflow `sync.yml`
+looks for a newer release of Kurt. If there is one, `scripts/sync-kurt-lang.sh` takes its keywords
+and its `kurt.py` from the public repository at that release, checks them (`npm run check`, the
+build, the bundled Kurt checks a proof), and makes a new version of the extension, which
+`release.yml` releases (a GitHub release with `kurt.vsix`; the VS Code Marketplace and Open VSX
+once switched on). If a check fails -- a new keyword that the hand-written grammars
+(`syntaxes/kurt.tmLanguage.json`, `kurt-mode.el`, `syntax/kurt.vim`) don't cover yet -- nothing is
+released and GitHub sends an email; fix them, then press the button. The extension has its own
+version numbers.
+
+`python3 scripts/check_editor_support.py` compares all three editor definitions with a Kurt
+checkout (`KURT_LANG_PATH`, else `../kurt-lang` or `../kurt-lang-dev`) and fails if a current
+command is missing.

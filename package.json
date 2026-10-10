@@ -5,6 +5,15 @@
     "version": "0.8.0",
     "publisher": "harmeling",
     "license": "MIT",
+    "icon": "images/icon.png",
+    "galleryBanner": {
+        "color": "#247eea",
+        "theme": "dark"
+    },
+    "homepage": "https://www.kurt-lang.org",
+    "bugs": {
+        "url": "https://github.com/harmeling/kurt-syntax/issues"
+    },
     "engines": {
         "vscode": "^1.99.0"
     },
