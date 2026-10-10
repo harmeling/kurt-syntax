@@ -21,3 +21,4 @@ out/*.map
 package-lock.json
 .github/**
 README.md
+images/logo-1024.png

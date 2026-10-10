@@ -2,6 +2,11 @@
 
 The extension has its own version numbers; each release says which Kurt it comes with.
 
+## Unreleased
+
+- A new icon: the logo "⊢kurt" (the turnstile: "proves"), in Inconsolata (`scripts/make_icon.py`).
+- The Marketplace page is a README for VS Code only (`extension/README.md`).
+
 ## 0.8.1
 
 - The extension is now **Kurt** (`harmeling.kurt`), formerly "Kurt Syntax".
