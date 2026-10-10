@@ -1,10 +1,12 @@
 """Draw Kurt's logo, "⊢kurt" (the turnstile: "proves"), as images/icon.png (256 px, the
-extension's icon) and images/logo-1024.png.
+extension's icon), images/logo-1024.png, and, with fontTools, as vectors: images/logo.svg (the
+same, e.g. a favicon) and images/wordmark.svg (only "⊢kurt", its letters in `currentColor`, e.g.
+in a page's header, light or dark).
 
     python3 scripts/make_icon.py
 
-Needs Pillow and the font Inconsolata (SIL Open Font License), which it downloads from Google
-Fonts into scripts/fonts/ (not committed) the first time.
+Needs Pillow, the font Inconsolata (SIL Open Font License), which it downloads from Google Fonts
+into scripts/fonts/ (not committed) the first time, and fontTools for the SVGs (else skipped).
 """
 
 import os
@@ -49,22 +51,68 @@ def measure(d, f):
     return b, h, turnstile, gap, turnstile + gap + (b[2] - b[0])
 
 
-def draw():
-    im = Image.new('RGBA', (N, N), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    d.rounded_rectangle([0, 0, N - 1, N - 1], radius=RADIUS, fill=NAVY)
+def layout():
+    """where everything goes, in pixels of the N x N icon"""
+    d = ImageDraw.Draw(Image.new('RGBA', (N, N)))
     size = 300
     for _ in range(4):             # the size at which it takes WIDTH of the width
         size = int(size * WIDTH * N / measure(d, font(size))[4])
     f = font(size)
     b, h, turnstile, gap, total = measure(d, f)
-    w = stem(f) * 0.8
     x, base = N / 2 - total / 2, N / 2 + h / 2
+    return dict(size=size, h=h, turnstile=turnstile, w=stem(f) * 0.8, x=x, base=base,
+                text_x=x + turnstile + gap - b[0], total=total)
+
+
+def draw():
+    L = layout()
+    im = Image.new('RGBA', (N, N), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([0, 0, N - 1, N - 1], radius=RADIUS, fill=NAVY)
+    x, base, h, w = L['x'], L['base'], L['h'], L['w']
     mid = base - h / 2
     d.rectangle([x, base - h, x + w, base], fill=GREEN)
-    d.rectangle([x, mid - w / 2, x + turnstile, mid + w / 2], fill=GREEN)
-    d.text((x + turnstile + gap - b[0], base), 'kurt', font=f, fill=WHITE, anchor='ls')
+    d.rectangle([x, mid - w / 2, x + L['turnstile'], mid + w / 2], fill=GREEN)
+    d.text((L['text_x'], base), 'kurt', font=font(L['size']), fill=WHITE, anchor='ls')
     return im
+
+
+def svgs():
+    """the logo and the wordmark as SVG, the letters as paths (no font needed to show them)"""
+    from fontTools.pens.svgPathPen import SVGPathPen
+    from fontTools.pens.transformPen import TransformPen
+    from fontTools.ttLib import TTFont
+    from fontTools.varLib.instancer import instantiateVariableFont
+
+    tt = TTFont(FONT)
+    weight = next(a for a in tt['fvar'].axes if a.axisTag == 'wght').maxValue
+    tt = instantiateVariableFont(tt, {'wght': weight})
+    L = layout()
+    scale = L['size'] / tt['head'].unitsPerEm
+    glyphs, cmap = tt.getGlyphSet(), tt.getBestCmap()
+    pen = SVGPathPen(glyphs)
+    x = L['text_x']
+    for ch in 'kurt':
+        name = cmap[ord(ch)]
+        glyphs[name].draw(TransformPen(pen, (scale, 0, 0, -scale, x, L['base'])))
+        x += glyphs[name].width * scale
+    letters = pen.getCommands()
+    x, base, h, w, t = L['x'], L['base'], L['h'], L['w'], L['turnstile']
+    mid = base - h / 2
+    green = '#%02x%02x%02x' % GREEN
+    turnstile = (f'<path fill="{green}" d="M{x:.1f} {base - h:.1f}h{w:.1f}v{h:.1f}h{-w:.1f}z'
+                 f'M{x:.1f} {mid - w / 2:.1f}h{t:.1f}v{w:.1f}h{-t:.1f}z"/>')
+    logo = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {N} {N}">'
+            f'<rect width="{N}" height="{N}" rx="{RADIUS}" fill="#%02x%02x%02x"/>' % NAVY +
+            turnstile + f'<path fill="#fff" d="{letters}"/></svg>\n')
+    pad = h * 0.08                 # the wordmark: only "⊢kurt", its letters in the text's colour
+    top = base - h - pad
+    word = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x - pad:.1f} {top:.1f} '
+            f'{L["total"] + 2 * pad:.1f} {h + 2 * pad:.1f}">' + turnstile +
+            f'<path fill="currentColor" d="{letters}"/></svg>\n')
+    for name, text in (('logo.svg', logo), ('wordmark.svg', word)):
+        with open(os.path.join(ROOT, 'images', name), 'w') as f:
+            f.write(text)
 
 
 def main():
@@ -74,6 +122,10 @@ def main():
     im = draw()
     im.save(os.path.join(ROOT, 'images', 'logo-1024.png'))
     im.resize((256, 256), Image.LANCZOS).save(os.path.join(ROOT, 'images', 'icon.png'))
+    try:
+        svgs()
+    except ImportError:
+        print('no fontTools: the SVGs are not made')
 
 
 if __name__ == '__main__':
