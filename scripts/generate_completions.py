@@ -2,11 +2,14 @@
 """Write completions.json -- Kurt's keywords and the theories that come with it, for the editors'
 completion without a language server -- from the kurt-lang checkout next to this repository."""
 from __future__ import annotations
-import ast, json
+import ast, json, os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-LANG = ROOT.parent / "kurt-lang" / "src" / "kurt"
+configured = os.environ.get("KURT_LANG_PATH")
+candidates = ([Path(configured)] if configured else []) + [ROOT.parent / "kurt-lang", ROOT.parent / "kurt-lang-dev"]
+LANG_ROOT = next((path for path in candidates if (path / "src/kurt/kurt.py").is_file()), candidates[0])
+LANG = LANG_ROOT / "src" / "kurt"
 
 def data() -> dict:
     tree = ast.parse((LANG / "kurt.py").read_text(encoding="utf-8"))

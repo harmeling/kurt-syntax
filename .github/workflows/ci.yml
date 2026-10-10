@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  # scripts/check_editor_support.py and generate_completions.py read Kurt's current keywords from
+  # here: the public, released harmeling/kurt-lang -- that is what a user who installs the
+  # extension actually has, not the private, ahead-of-release kurt-lang-dev.
+  KURT_LANG_PATH: ${{ github.workspace }}/kurt-lang
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out kurt-lang (for scripts/check_editor_support.py)
+        uses: actions/checkout@v4
+        with:
+          repository: harmeling/kurt-lang
+          path: kurt-lang
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm ci
+
+      - name: Build (type-check, then bundle the extension)
+        run: npm run build
+
+      - name: Check that the editors cover Kurt's current keywords
+        run: npm run check
+
+      - name: Package the .vsix (packaging must succeed; the result is not published)
+        run: npx vsce package --out /tmp/kurt-syntax-ci.vsix

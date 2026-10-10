@@ -139,7 +139,9 @@
     "devDependencies": {
         "@types/node": "^22.14.1",
         "@types/vscode": "^1.99.1",
+        "@vscode/vsce": "^4.0.0",
         "esbuild": "^0.25.10",
+        "ovsx": "^0.10.5",
         "typescript": "^5.8.3"
     }
 }
