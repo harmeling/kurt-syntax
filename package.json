@@ -1,7 +1,7 @@
 {
-    "name": "kurt-syntax",
-    "displayName": "Kurt Syntax",
-    "description": "Editor support for the Kurt proof language.",
+    "name": "kurt",
+    "displayName": "Kurt",
+    "description": "The Kurt proof language: each line of a proof checked as you type, with its reason, errors and todos at their lines, completion, and hover with the certificate.",
     "version": "0.8.0",
     "publisher": "harmeling",
     "license": "MIT",
@@ -9,7 +9,9 @@
         "vscode": "^1.99.0"
     },
     "categories": [
-        "Programming Languages"
+        "Programming Languages",
+        "Linters",
+        "Education"
     ],
     "repository": {
         "type": "git",
@@ -22,18 +24,19 @@
         "vscode:prepublish": "npm run build",
         "check": "python3 scripts/check_editor_support.py",
         "package": "vsce package",
-        "install-extension": "code --install-extension kurt-syntax-0.8.0.vsix --force"
+        "install-extension": "code --install-extension kurt-0.8.0.vsix --force"
     },
     "main": "./out/extension.js",
     "activationEvents": [
         "onLanguage:kurt"
     ],
     "keywords": [
-        "syntax",
-        "highlighting",
         "kurt",
-        "dsl",
-        "language"
+        "proof",
+        "proof assistant",
+        "logic",
+        "mathematics",
+        "education"
     ],
     "contributes": {
         "configurationDefaults": {
@@ -96,6 +99,22 @@
                     "default": [],
                     "restricted": true,
                     "description": "Additional trusted theory directories."
+                },
+                "kurt.server.importStrategy": {
+                    "type": "string",
+                    "enum": ["fromEnvironment", "useBundled"],
+                    "enumDescriptions": [
+                        "An installed Kurt (kurt.server.path, a .venv of the workspace, kurt on PATH); else the kurt.py that comes with the extension.",
+                        "The kurt.py that comes with the extension (run with Python); else an installed Kurt."
+                    ],
+                    "default": "fromEnvironment",
+                    "description": "Which Kurt runs the language server. \"Kurt: Show Version\" says which one runs."
+                },
+                "kurt.server.python": {
+                    "type": "string",
+                    "default": "",
+                    "restricted": true,
+                    "description": "The Python (3.10 or newer) for the kurt.py that comes with the extension. Empty: python3 (py -3 on Windows)."
                 },
                 "kurt.server.strict": {
                     "type": "boolean",

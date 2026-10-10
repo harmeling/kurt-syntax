@@ -5,9 +5,8 @@ name: Release
 # and Open VSX (job `publish-openvsx`) -- the latter two only once switched on (GitHub: Settings,
 # Secrets and variables, Actions: Variables `PUBLISH_MARKETPLACE` / `PUBLISH_OPENVSX` = `true`,
 # and Secrets `VSCE_PAT` / `OVSX_PAT`). By hand, for a tag that exists already: Actions, Release,
-# Run workflow, with the tag. After a kurt-lang release, run scripts/sync-kurt-lang.sh first and
-# push the tag it creates (if anything changed) -- this file doesn't need to know that; it just
-# reacts to the tag either way.
+# Run workflow, with the tag. After a Kurt release, sync.yml (daily, or its "Run workflow" button)
+# brings the extension up to it and calls this workflow with the new tag.
 
 on:
   push:
@@ -15,7 +14,12 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "the version tag, e.g. v0.1.0"
+        description: "the version tag, e.g. v0.8.1"
+        required: true
+  workflow_call:                 # from sync.yml (a tag pushed there doesn't start this workflow)
+    inputs:
+      tag:
+        type: string
         required: true
 
 env:
@@ -65,12 +69,12 @@ jobs:
           node-version: "22"
 
       - run: npm ci
-      - run: npx vsce package --out kurt-syntax.vsix
+      - run: npx vsce package --out kurt.vsix
 
       - uses: actions/upload-artifact@v4
         with:
-          name: kurt-syntax-vsix
-          path: kurt-syntax.vsix
+          name: kurt-vsix
+          path: kurt.vsix
 
   publish-marketplace:
     needs: package
@@ -89,9 +93,9 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: kurt-syntax-vsix
+          name: kurt-vsix
 
-      - run: npx vsce publish --packagePath kurt-syntax.vsix --pat "$VSCE_PAT"
+      - run: npx vsce publish --packagePath kurt.vsix --pat "$VSCE_PAT"
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
@@ -112,16 +116,16 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: kurt-syntax-vsix
+          name: kurt-vsix
 
-      - run: npx ovsx publish kurt-syntax.vsix --pat "$OVSX_PAT"
+      - run: npx ovsx publish kurt.vsix --pat "$OVSX_PAT"
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
   github-release:
     needs: package
     # the .vsix attached to a GitHub release, independent of the Marketplace/Open VSX -- so
-    # `.../releases/latest/download/kurt-syntax.vsix` is a stable link for manual installation
+    # `.../releases/latest/download/kurt.vsix` is a stable link for manual installation
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -132,14 +136,14 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: kurt-syntax-vsix
+          name: kurt-vsix
 
-      - name: Create the release with kurt-syntax.vsix (or update the file of an existing one)
+      - name: Create the release with kurt.vsix (or update the file of an existing one)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" kurt-syntax.vsix --clobber
+            gh release upload "$TAG" kurt.vsix --clobber
           else
-            gh release create "$TAG" kurt-syntax.vsix --title "Kurt Syntax ${TAG#v}" --generate-notes
+            gh release create "$TAG" kurt.vsix --title "Kurt for VS Code ${TAG#v}" --generate-notes
           fi

@@ -17,3 +17,6 @@ todo.md
 tsconfig.json
 out/*.map
 *.vsix
+**/__pycache__/**
+package-lock.json
+.github/**

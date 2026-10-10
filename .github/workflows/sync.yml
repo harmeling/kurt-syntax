@@ -1,0 +1,64 @@
+name: Sync with Kurt
+
+# every day, and by hand (Actions, "Sync with Kurt", Run workflow): is there a newer release of Kurt
+# (harmeling/kurt-lang) than the one the extension has? Then scripts/sync-kurt-lang.sh brings the
+# extension up to it (keywords, the bundled kurt.py), checks it, and makes a new version, which is
+# released right away (release.yml). Nothing new: nothing happens. A check fails: nothing is
+# released, and GitHub sends an email.
+
+on:
+  schedule:
+    - cron: "23 4 * * *"       # daily, 04:23 UTC
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "a release of Kurt, e.g. v0.8.1 (empty: the latest)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.sync.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: npm ci
+
+      - name: Bring the extension up to the release of Kurt
+        id: sync
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          scripts/sync-kurt-lang.sh "${{ inputs.tag }}"
+
+      - name: Push the new version
+        if: steps.sync.outputs.tag != ''
+        run: git push origin HEAD:main "${{ steps.sync.outputs.tag }}"
+
+  release:
+    needs: sync
+    if: needs.sync.outputs.tag != ''
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.sync.outputs.tag }}
+    secrets: inherit

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { execFile } from 'child_process';
+import { execFile, execFileSync } from 'child_process';
 import {
     LanguageClient,
     LanguageClientOptions,
@@ -17,6 +17,7 @@ let restartQueue: Promise<void> = Promise.resolve();
 let stateSubscription: vscode.Disposable | undefined;
 let reasonDecoration: vscode.TextEditorDecorationType;
 let reasonTimer: ReturnType<typeof setTimeout> | undefined;
+let extensionPath = '';
 
 function configuration(): vscode.WorkspaceConfiguration {
     return vscode.workspace.getConfiguration('kurt');
@@ -27,19 +28,70 @@ function workspaceFolder(): vscode.WorkspaceFolder | undefined {
     return document ? vscode.workspace.getWorkspaceFolder(document.uri) : vscode.workspace.workspaceFolders?.[0];
 }
 
-function executable(): string {
+// the Kurt that runs the language server: an installed one (the setting `kurt.server.path`, a
+// `.venv` of the workspace, `kurt` on PATH), else the `kurt.py` that comes with the extension, run
+// with Python -- or the other way round, with `kurt.server.importStrategy` = `useBundled`
+type Server = { command: string, args: string[], source: string };
+
+function onPath(name: string): string | undefined {
+    const names = process.platform === 'win32' ? [`${name}.exe`, `${name}.cmd`, `${name}.bat`] : [name];
+    for (const folder of (process.env.PATH ?? '').split(path.delimiter)) {
+        for (const candidate of names) {
+            const full = path.join(folder, candidate);
+            if (folder && fs.existsSync(full)) return full;
+        }
+    }
+    return undefined;
+}
+
+function installed(): Server | undefined {
     const configured = configuration().get<string>('server.path', '').trim();
     const folder = workspaceFolder();
     if (configured) {
-        return path.isAbsolute(configured) || !folder ? configured : path.join(folder.uri.fsPath, configured);
+        const command = path.isAbsolute(configured) || !folder ? configured : path.join(folder.uri.fsPath, configured);
+        return { command, args: [], source: 'the setting kurt.server.path' };
     }
     if (vscode.workspace.isTrusted && folder) {
         const local = process.platform === 'win32'
             ? path.join(folder.uri.fsPath, '.venv', 'Scripts', 'kurt.exe')
             : path.join(folder.uri.fsPath, '.venv', 'bin', 'kurt');
-        if (fs.existsSync(local)) return local;
+        if (fs.existsSync(local)) return { command: local, args: [], source: 'the .venv of the workspace' };
     }
-    return 'kurt';
+    const found = onPath('kurt');
+    return found ? { command: found, args: [], source: 'kurt on PATH' } : undefined;
+}
+
+function python(): string[] | undefined {
+    // a Python 3.10 or newer: the setting `kurt.server.python`, else the usual names
+    const configured = configuration().get<string>('server.python', '').trim();
+    const candidates = configured ? [[configured]]
+        : process.platform === 'win32' ? [['py', '-3'], ['python'], ['python3']] : [['python3'], ['python']];
+    for (const [command, ...args] of candidates) {
+        try {
+            execFileSync(command, [...args, '-c', 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)'],
+                         { timeout: 10000, stdio: 'ignore' });
+            return [command, ...args];
+        } catch {
+            // not there, or too old
+        }
+    }
+    return undefined;
+}
+
+function bundled(): Server | undefined {
+    const script = path.join(extensionPath, 'bundled', 'kurt.py');
+    if (!fs.existsSync(script)) return undefined;
+    const interpreter = python();
+    if (!interpreter) return undefined;
+    const [command, ...args] = interpreter;
+    return { command, args: [...args, script], source: 'the kurt.py that comes with the extension' };
+}
+
+function server(): Server | undefined {
+    if (configuration().get<string>('server.importStrategy', 'fromEnvironment') === 'useBundled') {
+        return bundled() ?? installed();
+    }
+    return installed() ?? bundled();
 }
 
 function setStatus(text: string, tooltip: string, command = 'kurt.showServerOutput'): void {
@@ -63,7 +115,8 @@ async function recoveryMessage(error: unknown): Promise<void> {
     output.appendLine(`Unable to start Kurt: ${error instanceof Error ? error.message : String(error)}`);
     setStatus('Kurt unavailable', 'Kurt language server did not start', 'kurt.selectExecutable');
     const choice = await vscode.window.showErrorMessage(
-        'The Kurt language server could not start. Install Kurt or select its executable.',
+        'Kurt could not start. It needs Python 3.10 or newer (python.org), or an installed Kurt ' +
+        '(`pip install kurt-lang`), or its executable selected.',
         'Select Executable', 'Setup', 'Show Output');
     if (choice === 'Select Executable') await vscode.commands.executeCommand('kurt.selectExecutable');
     if (choice === 'Setup') await vscode.env.openExternal(vscode.Uri.parse('https://www.kurt-lang.org'));
@@ -73,8 +126,14 @@ async function recoveryMessage(error: unknown): Promise<void> {
 async function startServer(): Promise<void> {
     if (client) return;
     const config = configuration();
-    const command = executable();
-    const args = [...config.get<string[]>('server.extraArgs', []), '--lsp'];
+    const found = server();
+    if (!found) {
+        await recoveryMessage(new Error('neither an installed kurt nor a Python 3.10 or newer for the bundled kurt.py was found'));
+        return;
+    }
+    const command = found.command;
+    const args = [...found.args, ...config.get<string[]>('server.extraArgs', []), '--lsp'];
+    output.appendLine(`Kurt: ${found.source} (${command} ${args.join(' ')})`);
     const serverOptions: ServerOptions = { command, args };
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{ scheme: 'file', language: 'kurt' }, { scheme: 'untitled', language: 'kurt' }],
@@ -93,7 +152,7 @@ async function startServer(): Promise<void> {
     const next = new LanguageClient('kurt', 'Kurt Language Server', serverOptions, clientOptions);
     client = next;
     stateSubscription = next.onDidChangeState(event => {
-        if (event.newState === State.Starting) setStatus('Kurt: starting…', `${command} ${args.join(' ')}`);
+        if (event.newState === State.Starting) setStatus('Kurt: starting…', `${found.source}: ${command} ${args.join(' ')}`);
         if (event.newState === State.Running) {
             refreshProblemStatus();
             scheduleReasons();
@@ -214,6 +273,7 @@ function scheduleReasons(): void {
 }
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    extensionPath = context.extensionPath;
     reasonDecoration = vscode.window.createTextEditorDecorationType({
         after: { color: new vscode.ThemeColor('editorInlayHint.foreground') },
         rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
@@ -241,8 +301,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             refreshProblemStatus();
         }),
         vscode.commands.registerCommand('kurt.showVersion', () => {
-            execFile(executable(), ['--version'], (error, stdout, stderr) => {
-                const message = error ? stderr || error.message : stdout.trim();
+            const found = server();
+            if (!found) {
+                void vscode.window.showErrorMessage('Kurt: no installed kurt, and no Python 3.10 or newer for the bundled kurt.py');
+                return;
+            }
+            execFile(found.command, [...found.args, '--version'], (error, stdout, stderr) => {
+                const message = error ? stderr || error.message : `${stdout.trim()} (${found.source})`;
                 if (error) output.appendLine(message);
                 void vscode.window.showInformationMessage(error ? `Kurt: ${message}` : message);
             });
