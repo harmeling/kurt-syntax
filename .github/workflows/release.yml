@@ -6,6 +6,10 @@ name: Release
 # Secrets and variables, Actions: Variables `PUBLISH_MARKETPLACE` / `PUBLISH_OPENVSX` = `true`,
 # and Secrets `VSCE_PAT` / `OVSX_PAT`). By hand, for a tag that exists already: Actions, Release,
 # Run workflow, with the tag.
+#
+# Also needed, always (not gated): the secret `KURT_LANG_DEV_PAT`, a fine-grained PAT scoped to
+# read-only Contents access on harmeling/kurt-lang-dev only -- the `verify` job checks this
+# extension's keyword coverage against it (see ci.yml), and that repository is private.
 
 on:
   push:
@@ -18,24 +22,27 @@ on:
 
 env:
   TAG: ${{ inputs.tag || github.ref_name }}
-  # scripts/check_editor_support.py and generate_completions.py read Kurt's keywords from here
+  # see ci.yml: deliberately the private, ahead-of-release kurt-lang-dev, not the lagging public
+  # kurt-lang mirror
   KURT_LANG_PATH: ${{ github.workspace }}/kurt-lang-dev
 
 jobs:
   verify:
     # before anything is packaged: the tag is the version in package.json, and the extension
-    # builds and passes its checks against the released kurt-lang-dev
+    # builds and passes its checks against the current kurt-lang-dev
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.TAG }}
 
+      # see ci.yml: harmeling/kurt-lang-dev is private, hence the dedicated PAT
       - name: Check out kurt-lang-dev (for scripts/check_editor_support.py)
         uses: actions/checkout@v4
         with:
           repository: harmeling/kurt-lang-dev
           path: kurt-lang-dev
+          token: ${{ secrets.KURT_LANG_DEV_PAT }}
 
       - uses: actions/setup-node@v4
         with:
