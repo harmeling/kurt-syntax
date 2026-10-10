@@ -18,7 +18,7 @@ Dortmund).
 
 - In VS Code: open the Extensions view (Cmd+Shift+X, or Ctrl+Shift+X), search for **Kurt**, and
   install "Kurt" by harmeling.
-- From the command line: `code --install-extension harmeling.kurt`
+- From the command line: `code --install-extension harmeling.kurt-lang`
 
 Open a `.kurt` file: it is checked right away. Only Python 3.10 or newer has to be installed.
 

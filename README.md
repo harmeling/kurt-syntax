@@ -18,8 +18,8 @@ work at <https://github.com/harmeling/kurt-syntax/issues>.
 ## VS Code
 
 Install it in VS Code: the Extensions view (Cmd+Shift+X, or Ctrl+Shift+X), search for **Kurt**,
-install "Kurt" by harmeling; or on the command line: `code --install-extension harmeling.kurt`
-([its page on the Marketplace](https://marketplace.visualstudio.com/items?itemName=harmeling.kurt)).
+install "Kurt" by harmeling; or on the command line: `code --install-extension harmeling.kurt-lang`
+([its page on the Marketplace](https://marketplace.visualstudio.com/items?itemName=harmeling.kurt-lang)).
 Open a `.kurt` file: it is checked right away. (Each version is also a `kurt.vsix` in the
 [releases](https://github.com/harmeling/kurt-syntax/releases).)
 

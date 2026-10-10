@@ -1,7 +1,5 @@
 #!/bin/bash
-
-# compile the package
-vsce package
-
-# install it in vscode
-code --install-extension kurt-syntax-0.1.0.vsix
+# build the extension and install it in VS Code (the same as: npm run package && npm run install-extension)
+set -e
+npm run package
+npm run install-extension

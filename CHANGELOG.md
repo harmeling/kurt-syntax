@@ -2,8 +2,10 @@
 
 The extension has its own version numbers; each release says which Kurt it comes with.
 
-## Unreleased
+## 0.8.2
 
+- The extension's ID is now `harmeling.kurt-lang` (as the Python package `kurt-lang`): the
+  Marketplace no longer accepts `harmeling.kurt`. Its name is still **Kurt**, its settings `kurt.*`.
 - A new icon: the logo "⊢kurt" (the turnstile: "proves"), in Inconsolata (`scripts/make_icon.py`).
 - The Marketplace page is a README for VS Code only (`extension/README.md`).
 
