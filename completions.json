@@ -47,10 +47,12 @@
  ],
  "theories": [
   "analysis",
+  "derivative",
   "equality",
   "field",
   "group",
   "integer",
+  "integral",
   "lambda",
   "logic",
   "matrix",
