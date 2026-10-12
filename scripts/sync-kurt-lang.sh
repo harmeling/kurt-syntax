@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Bring the extension up to a released Kurt: its keyword lists (completions.json) and the bundled
-# kurt.py, both from the public repository harmeling/kurt-lang at the release's tag -- never from a
-# local checkout (which may be ahead of the release). If anything changed, check it, raise the
+# Bring the extension up to a released Kurt: its keyword lists (completions.json), its LaTeX
+# shortcuts (replacements.json) and the bundled kurt.py, all from the public repository
+# harmeling/kurt-lang at the release's tag -- never from a local checkout (which may be ahead of
+# the release). If anything changed, check it, raise the
 # extension's own version, commit, and tag it; pushing the tag (and main) releases the extension
 # (release.yml). The workflow sync.yml runs this every day and on its "Run workflow" button.
 #
@@ -38,7 +39,7 @@ python3 scripts/generate_completions.py
 mkdir -p bundled
 cp "$tmp/kurt.py" bundled/kurt.py
 
-if git diff --quiet -- completions.json bundled/kurt.py && git ls-files --error-unmatch bundled/kurt.py >/dev/null 2>&1; then
+if git diff --quiet -- completions.json replacements.json bundled/kurt.py && git ls-files --error-unmatch bundled/kurt.py >/dev/null 2>&1; then
     echo "already at Kurt $tag; nothing to do"
     exit 0
 fi
@@ -55,7 +56,7 @@ rm -rf bundled/__pycache__
 # a new version of the extension (its own numbers: the patch number goes up)
 npm version patch --no-git-tag-version >/dev/null
 version=$(node -p "require('./package.json').version")
-git add completions.json bundled/kurt.py package.json package-lock.json
+git add completions.json replacements.json bundled/kurt.py package.json package-lock.json
 git commit -q -m "Kurt $tag: the extension $version (keywords and the bundled kurt.py)"
 git tag "v$version"
 echo "v$version: push with  git push origin HEAD:main v$version"

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Write completions.json -- Kurt's keywords and the theories that come with it, for the editors'
-completion without a language server -- from the kurt-lang checkout next to this repository."""
+completion without a language server -- and replacements.json -- Kurt's LaTeX shortcuts
+(`REPLACEMENTS`, e.g. `\\forall` -> `∀`), for the editors' input -- from the kurt-lang checkout next
+to this repository (the sync: the release's)."""
 from __future__ import annotations
 import ast, json, os
 from pathlib import Path
@@ -18,6 +20,13 @@ def data() -> dict:
     theories = sorted(p.stem for p in (LANG / "theories").glob("*.kurt") if p.stem != "minimal")
     return {"keywords": keywords + ["with"], "theories": theories}
 
+def replacements() -> dict:
+    tree = ast.parse((LANG / "kurt.py").read_text(encoding="utf-8"))
+    return next(ast.literal_eval(node.value) for node in tree.body
+                if isinstance(node, ast.AnnAssign) and getattr(node.target, "id", "") == "REPLACEMENTS")
+
 if __name__ == "__main__":
     (ROOT / "completions.json").write_text(json.dumps(data(), indent=1) + "\n", encoding="utf-8")
     print(f"wrote completions.json ({len(data()['keywords'])} keywords, {len(data()['theories'])} theories)")
+    (ROOT / "replacements.json").write_text(json.dumps(replacements(), indent=4, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"wrote replacements.json ({len(replacements())} shortcuts)")
