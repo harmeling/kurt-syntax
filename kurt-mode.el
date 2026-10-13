@@ -39,7 +39,7 @@
       "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "calc" "alias" "sort" "builtin"))
 
   (defconst kurt-keywords-second
-    '("load" "save" "use" "assume" "case" "let" "pick" "with" "show" "def" "inline" "local" "proof"
+    '("load" "save" "use" "assume" "case" "let" "pick" "with" "show" "def" "inline" "tex" "local" "proof"
       "qed" "todo" "sandbox" "expect" "break" "breakpoint"))
 
   (defconst kurt-keywords-third
