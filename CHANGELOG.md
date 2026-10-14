@@ -2,6 +2,12 @@
 
 The extension has its own version numbers; each release says which Kurt it comes with.
 
+## Unreleased
+
+- The reasons start at a column that fits the file: `kurt.reasons.column` is `"auto"` by default,
+  two after the 95th percentile of the widths of the lines with a reason (at least 20; one long
+  line doesn't move them); a number is a fixed column, as before (42 is Kurt's own).
+
 ## 0.8.3
 
 - The ID is `harmeling.kurt` again (0.8.2 was `harmeling.kurt-lang`: uninstall that one). Until it

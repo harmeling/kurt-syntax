@@ -59,7 +59,7 @@ Kurt version, and open the server output.
 
 Settings: trusted theory paths, strict mode, all errors (`kurt.allErrors`; off: only the first, as
 `kurt` on the command line), check-on-type, the reasons (`kurt.inlayHints.enabled`,
-`kurt.reasons.column`), extra command arguments, and protocol tracing.
+`kurt.reasons.column`: `"auto"`, fitting the file, or a column), extra command arguments, and protocol tracing.
 
 ## Troubleshooting
 

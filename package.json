@@ -168,10 +168,14 @@
                     "description": "Show the reason of each checked line after its end, as in Kurt's output."
                 },
                 "kurt.reasons.column": {
-                    "type": "integer",
-                    "default": 42,
+                    "type": [
+                        "integer",
+                        "string"
+                    ],
+                    "default": "auto",
                     "minimum": 0,
-                    "description": "The column where the reasons start (Kurt's own output uses 42)."
+                    "pattern": "^auto$",
+                    "description": "The column where the reasons start: \"auto\" (two after the 95th percentile of the widths of the lines with a reason, at least 20), or a number (Kurt's own output uses 42)."
                 },
                 "kurt.trace.server": {
                     "type": "string",

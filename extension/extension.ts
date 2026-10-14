@@ -230,9 +230,21 @@ function labelText(label: string | { value: string }[]): string {
     return typeof label === 'string' ? label : label.map(part => part.value).join('');
 }
 
+// The column of the reasons with `kurt.reasons.column: "auto"`: two after the 95th percentile of the
+// widths of the lines that get a reason (the whole file, so that the reasons don't move when
+// scrolling; one long line hardly moves it, so they don't jump while typing), at least 20. The
+// editor's width can't be known: VS Code has no API for it. A longer line gets its reason two
+// spaces after it.
+export function reasonColumn(widths: number[]): number {
+    if (widths.length === 0) return 20;
+    const sorted = [...widths].sort((a, b) => a - b);
+    const p95 = sorted[Math.floor(0.95 * (sorted.length - 1))];     // (the lower one: in a short file, its longest line doesn't count)
+    return Math.max(20, p95 + 2);
+}
+
 async function refreshReasons(): Promise<void> {
     const enabled = configuration().get<boolean>('inlayHints.enabled', true);
-    const column = configuration().get<number>('reasons.column', 42);
+    const setting = configuration().get<number | string>('reasons.column', 'auto');
     for (const editor of vscode.window.visibleTextEditors) {
         const document = editor.document;
         if (document.languageId !== 'kurt') continue;
@@ -251,6 +263,9 @@ async function refreshReasons(): Promise<void> {
             continue;                     // (the server restarts, or the document closed)
         }
         const tabSize = typeof editor.options.tabSize === 'number' ? editor.options.tabSize : 4;
+        const widths = (hints ?? []).filter(hint => hint.position.line < document.lineCount)
+            .map(hint => visualWidth(document.lineAt(hint.position.line).text, tabSize));
+        const column = typeof setting === 'number' ? setting : reasonColumn(widths);
         const decorations: vscode.DecorationOptions[] = [];
         for (const hint of hints ?? []) {
             const line = hint.position.line;
