@@ -72,3 +72,8 @@ To turn off the hover popup (plain VS Code, not Kurt-specific): `"editor.hover.e
 Nothing is checked: run **Kurt: Show Server Output**. If Python isn't found, set
 `kurt.server.python`; if an installed `kurt` isn't found (VS Code started from the Dock may have a
 different `PATH` than a terminal), use **Kurt: Select Kurt Executable** or set `kurt.server.path`.
+
+`[Error] Server process exited with code 0.` in that output is not an error: the server was
+stopped on purpose (a restart after a change of a setting, or the install or uninstall of an
+extension) and started again right after. Kurt's server ends with code 0 only when asked to
+(`shutdown`). The status bar says whether a server runs ("Kurt ✓").
