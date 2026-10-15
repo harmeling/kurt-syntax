@@ -61,6 +61,9 @@ Settings: trusted theory paths, strict mode, all errors (`kurt.allErrors`; off: 
 `kurt` on the command line), check-on-type, the reasons (`kurt.inlayHints.enabled`,
 `kurt.reasons.column`), extra command arguments, and protocol tracing.
 
+To turn off the hover popup (plain VS Code, not Kurt-specific): `"editor.hover.enabled": false`;
+**Show Hover** (`Ctrl+K Ctrl+I`, `Cmd+K Cmd+I` on macOS) still shows it on demand.
+
 ## Troubleshooting
 
 Nothing is checked: run **Kurt: Show Server Output**. If Python isn't found, set

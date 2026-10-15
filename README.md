@@ -49,6 +49,10 @@ mode, all errors (`kurt.allErrors`; off: only the first, as `kurt` on the comman
 check-on-type, the reasons (`kurt.inlayHints.enabled`, `kurt.reasons.column`), extra command
 arguments, and protocol tracing. Settings that change the server restart it automatically.
 
+**Hover.** This is plain VS Code, not a Kurt setting: `"editor.hover.enabled": false` turns off
+the hover popup that appears on mouse-over; with it off, **Show Hover** (`Ctrl+K Ctrl+I`, or
+`Cmd+K Cmd+I` on macOS) still shows the certificate of the line under the cursor on demand.
+
 To build it yourself: `npm install`, then `npm run package`.
 
 ## Emacs
