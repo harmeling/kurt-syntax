@@ -95,8 +95,8 @@ build, the bundled Kurt checks a proof), and makes a new version of the extensio
 `release.yml` releases (a GitHub release with `kurt.vsix`; the VS Code Marketplace and Open VSX
 once switched on). If a check fails -- a new keyword that the hand-written grammars
 (`syntaxes/kurt.tmLanguage.json`, `kurt-mode.el`, `syntax/kurt.vim`) don't cover yet -- nothing is
-released and GitHub sends an email; fix them, then press the button. The extension has its own
-version numbers.
+released and GitHub sends an email; fix them, then press the button. The extension's version is
+Kurt's (since 0.9.0): a change of the extension alone comes out with Kurt's next release.
 
 `python3 scripts/check_editor_support.py` compares all three editor definitions with a Kurt
 checkout (`KURT_LANG_PATH`, else `../kurt-lang-dev` or `../kurt-lang`) and fails if a current

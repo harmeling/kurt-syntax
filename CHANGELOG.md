@@ -1,6 +1,7 @@
 # Changelog
 
-The extension has its own version numbers; each release says which Kurt it comes with.
+The extension's version is Kurt's, since 0.9.0 (up to 0.8.6 it had its own numbers; each of
+those releases says which Kurt it comes with).
 
 ## Unreleased
 
