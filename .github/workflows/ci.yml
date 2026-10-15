@@ -35,4 +35,10 @@ jobs:
         run: npm run check
 
       - name: Package the .vsix (packaging must succeed; the result is not published)
-        run: npx vsce package --readme-path extension/README.md --out /tmp/kurt-syntax-ci.vsix
+        run: npx vsce package --readme-path extension/README.md --out kurt-lang.vsix
+
+      # to try an unreleased build: Actions, the run, "Artifacts" -- then `code --install-extension kurt-lang.vsix`
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kurt-lang-vsix
+          path: kurt-lang.vsix

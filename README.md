@@ -17,13 +17,16 @@ work at <https://github.com/harmeling/kurt-syntax/issues>.
 
 ## VS Code
 
-Install it from the command line (the extension `harmeling.kurt-lang`, "Kurt Proof Language", the file `kurt.vsix` of the
+Install it from the command line (the extension `harmeling.kurt-lang`, "Kurt Proof Language", the file `kurt-lang.vsix` of the
 [latest release](https://github.com/harmeling/kurt-syntax/releases/latest)):
 
 ```sh
-curl -LO https://github.com/harmeling/kurt-syntax/releases/latest/download/kurt.vsix
-code --install-extension kurt.vsix
+curl -LO https://github.com/harmeling/kurt-syntax/releases/latest/download/kurt-lang.vsix
+code --install-extension kurt-lang.vsix
 ```
+
+To try a build that isn't released: the CI run of a commit (Actions) has `kurt-lang.vsix` under
+"Artifacts"; or `npm install && npm run package` in a checkout makes `kurt-lang-VERSION.vsix`.
 
 Open a `.kurt` file: it is checked right away. (Not yet on the VS Code Marketplace; then also:
 search for **Kurt** in the Extensions view. An older `harmeling.kurt` from a `.vsix` must be
@@ -92,7 +95,7 @@ Every day, and on its "Run workflow" button (Actions, **Sync with Kurt**), the w
 looks for a newer release of Kurt. If there is one, `scripts/sync-kurt-lang.sh` takes its keywords
 and its `kurt.py` from the public repository at that release, checks them (`npm run check`, the
 build, the bundled Kurt checks a proof), and makes a new version of the extension, which
-`release.yml` releases (a GitHub release with `kurt.vsix`; the VS Code Marketplace and Open VSX
+`release.yml` releases (a GitHub release with `kurt-lang.vsix`; the VS Code Marketplace and Open VSX
 once switched on). If a check fails -- a new keyword that the hand-written grammars
 (`syntaxes/kurt.tmLanguage.json`, `kurt-mode.el`, `syntax/kurt.vim`) don't cover yet -- nothing is
 released and GitHub sends an email; fix them, then press the button. The extension's version is

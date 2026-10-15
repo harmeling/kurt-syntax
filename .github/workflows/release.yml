@@ -69,12 +69,12 @@ jobs:
           node-version: "22"
 
       - run: npm ci
-      - run: npx vsce package --readme-path extension/README.md --out kurt.vsix
+      - run: npx vsce package --readme-path extension/README.md --out kurt-lang.vsix
 
       - uses: actions/upload-artifact@v4
         with:
-          name: kurt-vsix
-          path: kurt.vsix
+          name: kurt-lang-vsix
+          path: kurt-lang.vsix
 
   publish-marketplace:
     needs: package
@@ -93,9 +93,9 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: kurt-vsix
+          name: kurt-lang-vsix
 
-      - run: npx vsce publish --packagePath kurt.vsix --pat "$VSCE_PAT"
+      - run: npx vsce publish --packagePath kurt-lang.vsix --pat "$VSCE_PAT"
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
@@ -116,16 +116,16 @@ jobs:
       - run: npm ci
       - uses: actions/download-artifact@v4
         with:
-          name: kurt-vsix
+          name: kurt-lang-vsix
 
-      - run: npx ovsx publish kurt.vsix --pat "$OVSX_PAT"
+      - run: npx ovsx publish kurt-lang.vsix --pat "$OVSX_PAT"
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
   github-release:
     needs: package
     # the .vsix attached to a GitHub release, independent of the Marketplace/Open VSX -- so
-    # `.../releases/latest/download/kurt.vsix` is a stable link for manual installation
+    # `.../releases/latest/download/kurt-lang.vsix` is a stable link for manual installation
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -136,14 +136,14 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: kurt-vsix
+          name: kurt-lang-vsix
 
-      - name: Create the release with kurt.vsix (or update the file of an existing one)
+      - name: Create the release with kurt-lang.vsix (or update the file of an existing one)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" kurt.vsix --clobber
+            gh release upload "$TAG" kurt-lang.vsix --clobber
           else
-            gh release create "$TAG" kurt.vsix --title "Kurt for VS Code ${TAG#v}" --generate-notes
+            gh release create "$TAG" kurt-lang.vsix --title "Kurt for VS Code ${TAG#v}" --generate-notes
           fi
