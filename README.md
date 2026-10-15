@@ -17,7 +17,7 @@ work at <https://github.com/harmeling/kurt-syntax/issues>.
 
 ## VS Code
 
-Install it from the command line (the extension `harmeling.kurt`, the file `kurt.vsix` of the
+Install it from the command line (the extension `harmeling.kurt-lang`, "Kurt Proof Language", the file `kurt.vsix` of the
 [latest release](https://github.com/harmeling/kurt-syntax/releases/latest)):
 
 ```sh
@@ -26,7 +26,9 @@ code --install-extension kurt.vsix
 ```
 
 Open a `.kurt` file: it is checked right away. (Not yet on the VS Code Marketplace; then also:
-search for **Kurt** in the Extensions view.)
+search for **Kurt** in the Extensions view. An older `harmeling.kurt` from a `.vsix` must be
+uninstalled: the Marketplace keeps the ID and the name of a removed extension, so the extension is
+`harmeling.kurt-lang` now, see the CHANGELOG.)
 
 The Marketplace shows `extension/README.md`, a shorter version of this section.
 

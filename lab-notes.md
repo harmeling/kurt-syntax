@@ -139,3 +139,20 @@ Running log of agent-session setup and activity for this repo, on the
   (scripts/generate_completions.py); check_editor_support.py checks it.
 - Not built or run here (no node, no emacs on this machine): `npm install && npm run build`,
   and a try in each editor, are still to do.
+
+## 2026-10-15: the extension is `harmeling.kurt-lang`, "Kurt Proof Language"
+
+- The VS Code Marketplace keeps the ID and the display name of a removed extension for good
+  (`harmeling.kurt`, "Kurt", removed by mistake on 2026-10-10; 0.8.2 failed with
+  `harmeling.kurt-lang` because it kept the name "Kurt"). A query of the Marketplace's gallery
+  API (`extensionquery`, "kurt"): no extension by anyone is called "Kurt"; 20 unrelated hits
+  (Kurtosis, Kurtsley Light, ...). The search matches the display name, the description, the tags
+  and the extension name, so "Kurt Proof Language" with the tag `kurt` is found for "kurt".
+- package.json: `name` `kurt-lang`, `displayName` "Kurt Proof Language"; the npm script
+  `install-extension` (vsce names the file `kurt-lang-VERSION.vsix`; release.yml writes
+  `kurt.vsix`, the download link stays). The READMEs, the CHANGELOG. On activation the extension
+  looks for `harmeling.kurt` and offers to uninstall it (two servers otherwise).
+- Built and packaged here (node 22 via nvm): the manifest says `Id="kurt-lang"`,
+  "Kurt Proof Language". Not uploaded: that is the author's manual step at
+  marketplace.visualstudio.com/manage ("New extension"), with the `kurt.vsix` of the next release.
+  Open VSX has no namespace `harmeling` yet.

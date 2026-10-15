@@ -4,6 +4,11 @@ The extension has its own version numbers; each release says which Kurt it comes
 
 ## Unreleased
 
+- The extension is **Kurt Proof Language**, `harmeling.kurt-lang` (as the Python package
+  `kurt-lang`): the VS Code Marketplace keeps the ID and the display name of a removed extension
+  for good, and `harmeling.kurt` ("Kurt", uploaded 2026-10-10) was removed by mistake. Nothing
+  else changes: the language `kurt`, the settings `kurt.*`, the commands. Uninstall the old
+  `harmeling.kurt` (from a `.vsix`), or two servers check each file -- the extension offers to.
 - The reasons start at a column that fits the file: `kurt.reasons.column` is `"auto"` by default,
   two after the 95th percentile of the widths of the lines with a reason (at least 20; one long
   line doesn't move them); a number is a fixed column, as before (42 is Kurt's own).

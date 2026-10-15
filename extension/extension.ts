@@ -342,6 +342,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }),
     );
     await startServer();
+    offerToUninstallTheOldExtension();
+}
+
+// the extension was `harmeling.kurt` ("Kurt") until 0.8.6, installed from a `.vsix`; the
+// Marketplace keeps the ID and the name of a removed extension, so it is `harmeling.kurt-lang`
+// now -- both installed means two servers for each file
+function offerToUninstallTheOldExtension(): void {
+    const old = vscode.extensions.getExtension('harmeling.kurt');
+    if (!old) return;
+    const uninstall = 'Uninstall it';
+    void vscode.window.showWarningMessage(
+        'Kurt: the older extension "Kurt" (harmeling.kurt) is installed too; this one, "Kurt Proof Language", replaces it.', uninstall)
+        .then(choice => {
+            if (choice === uninstall) {
+                void vscode.commands.executeCommand('workbench.extensions.uninstallExtension', 'harmeling.kurt');
+            }
+        });
 }
 
 export async function deactivate(): Promise<void> {
