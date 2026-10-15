@@ -1,9 +1,9 @@
 # Kurt for VS Code, Emacs and Vim
 
-Editor support for [Kurt](https://www.kurt-lang.org), a small language for writing mathematical
-proofs the way people write them, with a checker that tells you right away, line by line, whether
-each step follows -- made for students learning to prove things. Kurt is developed by Stefan
-Harmeling (TU Dortmund).
+Editor support for [Kurt](https://www.kurt-lang.org), a programming language for writing
+mathematical proofs the way people write them, with a checker that tells you right away, line by
+line, whether each step follows -- made for students learning to prove things. Kurt is developed
+by Stefan Harmeling (TU Dortmund).
 
 - each line of a proof is checked as you type, and its reason appears at its end (`; by 3(4)`)
 - errors and `todo`s are marked at their lines -- all errors of a file, not only the first

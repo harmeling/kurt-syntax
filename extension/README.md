@@ -1,6 +1,6 @@
 # Kurt for VS Code
 
-[Kurt](https://www.kurt-lang.org) is a small language for writing mathematical proofs the way
+[Kurt](https://www.kurt-lang.org) is a programming language for writing mathematical proofs the way
 people write them, with a checker that tells you right away, line by line, whether each step
 follows -- made for students learning to prove things. Kurt is developed by Stefan Harmeling (TU
 Dortmund).
