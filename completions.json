@@ -21,6 +21,7 @@
   "help",
   "hint",
   "infix",
+  "inline",
   "let",
   "list",
   "load",
@@ -38,6 +39,7 @@
   "summary",
   "sym",
   "syntax",
+  "tex",
   "theory",
   "todo",
   "tokenize",
@@ -47,6 +49,7 @@
  ],
  "theories": [
   "analysis",
+  "continuity",
   "derivative",
   "equality",
   "field",
@@ -61,6 +64,7 @@
   "numbers",
   "prop",
   "rational",
+  "sequences",
   "set",
   "vectorspace"
  ]

@@ -3,7 +3,9 @@
 The extension's version is Kurt's, since 0.9.0 (up to 0.8.6 it had its own numbers; each of
 those releases says which Kurt it comes with).
 
-## Unreleased
+## 0.9.0 (2026-10-16)
+
+- Comes with Kurt 0.9.0.
 
 - The extension is **Kurt Proof Language**, `harmeling.kurt-lang` (as the Python package
   `kurt-lang`): the VS Code Marketplace keeps the ID and the display name of a removed extension
