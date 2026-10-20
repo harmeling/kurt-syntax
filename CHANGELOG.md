@@ -5,6 +5,10 @@ those releases says which Kurt it comes with).
 
 ## Unreleased
 
+- "Kurt: Show Version" shows which `kurt.py` runs (from Kurt 0.10 on): its SHA-256 and its path, and
+  where the extension found it (bundled, `.venv`, `PATH`, the setting). The sync compares the first
+  line of `kurt --version` only.
+
 - `highlightjs/kurt.js`: Kurt for highlight.js -- code blocks ```` ```kurt ```` in reveal.js, Marp,
   and web pages (README, "Slides and web pages"); in the keyword check with the grammars.
 
