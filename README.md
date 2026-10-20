@@ -85,6 +85,29 @@ The reasons appear as inlay hints (Neovim 0.10 or newer), `K` on a line shows it
 
 Classic Vim continues to use the syntax and filetype support without LSP.
 
+## Slides and web pages (highlight.js, reveal.js)
+
+`highlightjs/kurt.js` is Kurt for [highlight.js](https://highlightjs.org), which reveal.js, Marp and
+many static sites use: code blocks marked ```` ```kurt ```` are highlighted. In reveal.js, with
+markdown slides:
+
+```html
+<script src="dist/reveal.js"></script>
+<script src="plugin/markdown/markdown.js"></script>
+<script src="plugin/highlight/highlight.js"></script>
+<script src="kurt.js"></script>   <!-- this repository's highlightjs/kurt.js -->
+<script>
+  Reveal.initialize({
+    plugins: [RevealMarkdown, RevealHighlight],
+    highlight: { beforeHighlight: hljs => hljs.registerLanguage('kurt', hljsDefineKurt) }
+  });
+</script>
+```
+
+On a page with highlight.js alone, load `kurt.js` after it: it registers `kurt` itself. In Node:
+`hljs.registerLanguage('kurt', require('./highlightjs/kurt.js'))`. The keywords are checked against
+Kurt's with the grammars (`npm run check`).
+
 ## Troubleshooting
 
 `kurt --version` and `kurt --lsp` must work in the environment launched by the editor. GUI editors often have a different `PATH` from a terminal; select the executable explicitly in VS Code, customize `kurt-lsp-command` in Emacs, or set `vim.g.kurt_server_path` in Neovim. VS Code's **Kurt: Show Server Output** command and `kurt.trace.server` setting show startup and protocol details.

@@ -5,6 +5,9 @@ those releases says which Kurt it comes with).
 
 ## Unreleased
 
+- `highlightjs/kurt.js`: Kurt for highlight.js -- code blocks ```` ```kurt ```` in reveal.js, Marp,
+  and web pages (README, "Slides and web pages"); in the keyword check with the grammars.
+
 - For Kurt 0.10: the keyword `prop` (Kurt's `bool` is `prop` from 0.10 on; `bool` stays highlighted
   for files of 0.9), and the first proof of the README with `load propositional` and `prop`.
 

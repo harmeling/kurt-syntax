@@ -9,6 +9,7 @@ lua/**
 ftdetect/**
 ftplugin/**
 syntax/**
+highlightjs/**
 kurt-mode.el*
 example.kurt
 install.sh

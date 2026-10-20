@@ -24,7 +24,7 @@ def words(path: Path) -> set[str]:
     return set(re.findall(r"[A-Za-z][A-Za-z0-9_-]*", path.read_text(encoding="utf-8")))
 
 expected = language_keywords() | HELPER | CONSTANTS
-files = [ROOT / "syntaxes/kurt.tmLanguage.json", ROOT / "kurt-mode.el", ROOT / "syntax/kurt.vim"]
+files = [ROOT / "syntaxes/kurt.tmLanguage.json", ROOT / "kurt-mode.el", ROOT / "syntax/kurt.vim", ROOT / "highlightjs/kurt.js"]
 json.loads(files[0].read_text(encoding="utf-8"))
 failures = []
 for path in files:
