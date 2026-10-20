@@ -322,7 +322,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 return;
             }
             execFile(found.command, [...found.args, '--version'], (error, stdout, stderr) => {
-                // (from Kurt 0.10 on two lines: the version, then the SHA-256 and the path of the kurt.py that runs)
+                // (from Kurt 0.10 on three lines: the version, the path and the SHA-256 of the kurt.py that runs)
                 const message = error ? stderr || error.message : `${stdout.trim().split(/\r?\n/).join(', ')} (${found.source})`;
                 if (error) output.appendLine(message);
                 void vscode.window.showInformationMessage(error ? `Kurt: ${message}` : message);

@@ -5,7 +5,7 @@ those releases says which Kurt it comes with).
 
 ## Unreleased
 
-- "Kurt: Show Version" shows which `kurt.py` runs (from Kurt 0.10 on): its SHA-256 and its path, and
+- "Kurt: Show Version" shows which `kurt.py` runs (from Kurt 0.10 on): its path and its SHA-256, and
   where the extension found it (bundled, `.venv`, `PATH`, the setting). The sync compares the first
   line of `kurt --version` only.
 
