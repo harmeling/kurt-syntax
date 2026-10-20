@@ -24,8 +24,11 @@ function configuration(): vscode.WorkspaceConfiguration {
 }
 
 function workspaceFolder(): vscode.WorkspaceFolder | undefined {
+    // the folder of the active editor's file -- else (the Output panel, a file outside the workspace:
+    // no folder) the first folder, so that its `.venv` is still found (a restart from the Output panel
+    // took `kurt` on PATH, 2026-10-20)
     const document = vscode.window.activeTextEditor?.document;
-    return document ? vscode.workspace.getWorkspaceFolder(document.uri) : vscode.workspace.workspaceFolders?.[0];
+    return (document ? vscode.workspace.getWorkspaceFolder(document.uri) : undefined) ?? vscode.workspace.workspaceFolders?.[0];
 }
 
 // the Kurt that runs the language server: an installed one (the setting `kurt.server.path`, a

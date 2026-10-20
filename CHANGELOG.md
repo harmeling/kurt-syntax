@@ -5,6 +5,9 @@ those releases says which Kurt it comes with).
 
 ## Unreleased
 
+- Fixed: a restart of the server with the Output panel (or a file outside the workspace) active
+  skipped the workspace's `.venv` and took `kurt` on PATH -- the first workspace folder counts then.
+
 - "Kurt: Show Version" shows which `kurt.py` runs (from Kurt 0.10 on): its path and its SHA-256, and
   where the extension found it (bundled, `.venv`, `PATH`, the setting). The sync compares the first
   line of `kurt --version` only.
