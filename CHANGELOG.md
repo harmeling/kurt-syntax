@@ -5,6 +5,9 @@ those releases says which Kurt it comes with).
 
 ## Unreleased
 
+- The status bar counts errors and warnings only, not the hints ("not used", shown faded), and a
+  click on "Kurt: N problems" opens the Problems view (before: the server's output).
+
 - Fixed: a restart of the server with the Output panel (or a file outside the workspace) active
   skipped the workspace's `.venv` and took `kurt` on PATH -- the first workspace folder counts then.
 

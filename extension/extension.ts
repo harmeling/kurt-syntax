@@ -106,12 +106,16 @@ function setStatus(text: string, tooltip: string, command = 'kurt.showServerOutp
 
 function refreshProblemStatus(): void {
     if (!client || client.state !== State.Running) return;
+    // errors and warnings (a `todo` is one) -- not the hints, e.g. "not used" for a line no later line
+    // cites, which VS Code shows faded (counted as problems until 2026-10-20)
     let problems = 0;
     for (const document of vscode.workspace.textDocuments.filter(doc => doc.languageId === 'kurt')) {
-        problems += vscode.languages.getDiagnostics(document.uri).length;
+        problems += vscode.languages.getDiagnostics(document.uri)
+            .filter(d => d.severity === vscode.DiagnosticSeverity.Error || d.severity === vscode.DiagnosticSeverity.Warning).length;
     }
     setStatus(problems ? `Kurt: ${problems} problem${problems === 1 ? '' : 's'}` : 'Kurt $(check)',
-              problems ? 'Kurt diagnostics' : 'Kurt language server is running');
+              problems ? 'Kurt diagnostics: show them' : 'Kurt language server is running',
+              problems ? 'workbench.actions.view.problems' : 'kurt.showServerOutput');
 }
 
 async function recoveryMessage(error: unknown): Promise<void> {
