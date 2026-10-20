@@ -49,7 +49,7 @@ fi
 npm run check
 npm run build
 [ "$(python3 bundled/kurt.py --version)" = "kurt ${tag#v}" ] || { echo "bundled/kurt.py is not Kurt ${tag#v}"; exit 1; }
-printf 'load prop\nbool A, B\nuse A implies B\nuse A\nB\n' > "$tmp/check.kurt"
+printf 'load propositional\nprop A, B\nuse A implies B\nuse A\nB\n' > "$tmp/check.kurt"
 (cd "$tmp" && python3 "$root/bundled/kurt.py" --no-kurtc check.kurt | grep -q 'Proof checked')
 rm -rf bundled/__pycache__
 

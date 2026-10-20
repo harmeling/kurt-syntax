@@ -30,8 +30,8 @@ Open a `.kurt` file: it is checked right away. Only Python 3.10 or newer has to 
 Save this as `first.kurt`:
 
 ```
-load prop
-bool A, B
+load propositional
+prop A, B
 use A implies B
 use A
 B

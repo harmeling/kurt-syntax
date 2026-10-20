@@ -36,7 +36,7 @@
   ;; Define keyword groups
   (defconst kurt-keywords-first
     '("var" "const" "infix" "postfix" "prefix"
-      "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "calc" "alias" "sort" "default" "everything" "builtin"))
+      "brackets" "arity" "bindop" "chain" "flat" "sym" "bool" "prop" "calc" "alias" "sort" "default" "everything" "builtin"))
 
   (defconst kurt-keywords-second
     '("load" "save" "use" "assume" "case" "let" "pick" "with" "show" "def" "inline" "tex" "lean" "local" "proof"

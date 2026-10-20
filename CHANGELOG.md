@@ -3,6 +3,11 @@
 The extension's version is Kurt's, since 0.9.0 (up to 0.8.6 it had its own numbers; each of
 those releases says which Kurt it comes with).
 
+## Unreleased
+
+- For Kurt 0.10: the keyword `prop` (Kurt's `bool` is `prop` from 0.10 on; `bool` stays highlighted
+  for files of 0.9), and the first proof of the README with `load propositional` and `prop`.
+
 ## 0.9.0 (2026-10-16)
 
 - Comes with Kurt 0.9.0.
