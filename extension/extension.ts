@@ -114,8 +114,8 @@ function refreshProblemStatus(): void {
             .filter(d => d.severity === vscode.DiagnosticSeverity.Error || d.severity === vscode.DiagnosticSeverity.Warning).length;
     }
     setStatus(problems ? `Kurt: ${problems} problem${problems === 1 ? '' : 's'}` : 'Kurt $(check)',
-              problems ? 'Kurt diagnostics: show them' : 'Kurt language server is running',
-              problems ? 'workbench.actions.view.problems' : 'kurt.showServerOutput');
+              problems ? 'Kurt diagnostics: show them' : 'Kurt language server is running: no problems (click for the Problems panel)',
+              'workbench.actions.view.problems');
 }
 
 async function recoveryMessage(error: unknown): Promise<void> {
