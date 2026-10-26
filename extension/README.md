@@ -7,7 +7,7 @@ Dortmund).
 
 - each line of a proof is checked as you type, and its reason appears at its end (`; by 3(4)`)
 - errors and `todo`s are marked at their lines -- all errors of a file, not only the first
-- hover shows the certificate of a line, with links to the lines it uses
+- hover shows the certificate of a line, with links to the lines it uses; on a theorem at the top level also what it rests on (axioms, definitions, `todo`s)
 - completion knows the state at the cursor: in a proof, its goal; after `load`, the theories
 - highlighting, snippets, and LaTeX-style input (`\forall` → `∀`)
 
