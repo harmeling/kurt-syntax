@@ -52,10 +52,12 @@
  ],
  "theories": [
   "analysis",
+  "complex",
   "continuity",
   "derivative",
   "equality",
   "field",
+  "finite",
   "group",
   "integer",
   "integral",
@@ -68,6 +70,7 @@
   "objects",
   "propositional",
   "rational",
+  "real",
   "sequences",
   "set",
   "vectorspace"

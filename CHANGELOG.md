@@ -3,7 +3,9 @@
 The extension's version is Kurt's, since 0.9.0 (up to 0.8.6 it had its own numbers; each of
 those releases says which Kurt it comes with).
 
-## Unreleased
+## 0.11.0 (2026-10-26)
+
+- Comes with Kurt 0.11.0.
 
 - `bool` is no keyword any more (Kurt 0.10: `prop`) -- out of the grammars of VS Code, Emacs, Vim
   and highlight.js.
