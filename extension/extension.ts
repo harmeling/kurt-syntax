@@ -128,11 +128,11 @@ function statusTooltip(state: string): vscode.MarkdownString {
     if (checking.size > 0) md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck)  \n');
     // one entry per line (`  \n` is a line break without the gap of a paragraph)
     md.appendMarkdown(
-                      `[${box(pause)}](command:kurt.togglePause) **Pause Kurt** *stops the language server:*  \n` +
+                      `[${box(pause)} **Pause Kurt**](command:kurt.togglePause) *stops the language server:*  \n` +
                       '*nothing is checked until you untick*\n\n---\n\n' +
-                      `[${box(hover)}](command:kurt.toggleHover) **Hover boxes** *hover over a line: its certificate,*  \n` +
+                      `[${box(hover)} **Hover boxes**](command:kurt.toggleHover) *hover over a line: its certificate,*  \n` +
                       '*and what a fact rests on (axioms, `todo`s)*\n\n---\n\n' +
-                      `[${box(heat)}](command:kurt.toggleHeat) **Heat map** *tints the lines: while checking, green done and*  \n` +
+                      `[${box(heat)} **Heat map**](command:kurt.toggleHeat) *tints the lines: while checking, green done and*  \n` +
                       '*yellow at work; then the slow ones, orange to red*');
     return md;
 }
