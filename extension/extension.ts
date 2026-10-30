@@ -105,13 +105,8 @@ function server(): Server | undefined {
     return installed() ?? bundled();
 }
 
-// the hover of the status item (shown above it): a headline, the progress bar of a running check, and the commands as links
+// the hover of the status item (shown above it): the server, its state, some stats, and the commands as links (a long check has its own progress toast)
 const STATUS_COMMANDS = ['kurt.cancelCheck', 'kurt.restartServer', 'kurt.showProblems', 'kurt.showServerOutput', 'kurt.toggleHover', 'kurt.toggleHeat'];
-
-function progressBar(done: number, total: number, width = 20): string {
-    const filled = total > 0 ? Math.max(0, Math.min(width, Math.round(width * done / total))) : 0;
-    return '█'.repeat(filled) + '░'.repeat(width - filled);
-}
 
 // the lines of each file that its last check went through (kept after the check ends: the stats of the hover)
 const checkedLines = new Map<string, number>();
@@ -127,28 +122,15 @@ function statusTooltip(state: string): vscode.MarkdownString {
     const open = vscode.workspace.textDocuments.filter(doc => doc.languageId === 'kurt');
     const lines = open.reduce((sum, doc) => sum + (checkedLines.get(doc.uri.toString()) ?? 0), 0);
     md.appendMarkdown(`${open.length} Kurt file${open.length === 1 ? '' : 's'} open, ${lines} lines checked\n\n`);
-    if (checking.size > 0) {
-        for (const [uri, progress] of checking) {
-            const name = path.basename(vscode.Uri.parse(uri).fsPath);
-            const percent = progress.lines > 0 ? Math.round(100 * progress.line / progress.lines) : 0;
-            const count = progress.lines > 0 ? `${percent}% (line ${progress.line} of ${progress.lines})` : `line ${progress.line}`;
-            md.appendMarkdown(`$(file) \`${name}\`  \n\`${progressBar(progress.line, progress.lines)}\` ${count}\n\n`);
-        }
-        md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck)\n\n');
-    } else {
-        const current = vscode.window.activeTextEditor?.document;
-        if (current?.languageId === 'kurt' && checkedLines.has(current.uri.toString())) {
-            md.appendMarkdown(`\`${progressBar(1, 1)}\` 100%\n\n`);
-        }
-    }
+    if (checking.size > 0) md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck)\n\n');
     // one entry per line (`  \n` is a line break without the gap of a paragraph)
     md.appendMarkdown('[$(debug-restart) Restart](command:kurt.restartServer)  \n' +
                       '[$(warning) Problems](command:kurt.showProblems)  \n' +
                       '[$(output) Output](command:kurt.showServerOutput)\n\n---\n\n' +
                       `[${box(hover)}](command:kurt.toggleHover) **Hover boxes**  \n` +
-                      '*hover over a line: its certificate, and what a fact rests on (axioms, `todo`s)*  \n' +
+                      '*hover over a line: its certificate,*  \n*and what a fact rests on (axioms, `todo`s)*\n\n---\n\n' +
                       `[${box(heat)}](command:kurt.toggleHeat) **Heat map**  \n` +
-                      '*tints the lines: green checked, yellow at work, orange to red the slower the search*');
+                      '*tints the lines: green checked, yellow at work,*  \n*orange to red the slower the search*');
     return md;
 }
 
