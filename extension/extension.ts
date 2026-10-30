@@ -114,7 +114,7 @@ function progressBar(done: number, total: number, width = 20): string {
 }
 
 function statusTooltip(headline: string): vscode.MarkdownString {
-    const box = (on: boolean) => on ? '$(check)' : '$(circle-large-outline)';
+    const box = (on: boolean) => on ? '☑' : '☐';
     const hover = configuration().get<boolean>('hover.enabled', true);
     const heat = configuration().get<boolean>('heat.enabled', true);
     const md = new vscode.MarkdownString(undefined, true);
@@ -126,13 +126,14 @@ function statusTooltip(headline: string): vscode.MarkdownString {
             const count = progress.lines > 0 ? `${progress.line} / ${progress.lines}` : `line ${progress.line}`;
             md.appendMarkdown(`$(file) \`${name}\`\n\n\`${progressBar(progress.line, progress.lines)}\` ${count}\n\n`);
         }
-        md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck) &nbsp;\n\n');
+        md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck)\n\n');
     }
-    md.appendMarkdown('[$(debug-restart) Restart](command:kurt.restartServer) &nbsp; ' +
-                      '[$(warning) Problems](command:kurt.showProblems) &nbsp; ' +
+    // one entry per line (`  \n` is a line break without the gap of a paragraph)
+    md.appendMarkdown('[$(debug-restart) Restart](command:kurt.restartServer)  \n' +
+                      '[$(warning) Problems](command:kurt.showProblems)  \n' +
                       '[$(output) Output](command:kurt.showServerOutput)\n\n---\n\n' +
-                      `[${box(hover)} Hover boxes](command:kurt.toggleHover) &nbsp; ` +
-                      `[${box(heat)} Heat map](command:kurt.toggleHeat)`);
+                      `[${box(hover)}](command:kurt.toggleHover) Hover boxes  \n` +
+                      `[${box(heat)}](command:kurt.toggleHeat) Heat map`);
     return md;
 }
 
