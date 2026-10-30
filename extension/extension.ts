@@ -106,13 +106,14 @@ function server(): Server | undefined {
 }
 
 // the hover of the status item (shown above it): the server, its state, some stats, and the commands as links (a long check has its own progress toast)
-const STATUS_COMMANDS = ['kurt.cancelCheck', 'kurt.restartServer', 'kurt.showProblems', 'kurt.showServerOutput', 'kurt.toggleHover', 'kurt.toggleHeat'];
+const STATUS_COMMANDS = ['kurt.cancelCheck', 'kurt.restartServer', 'kurt.showProblems', 'kurt.showServerOutput', 'kurt.toggleHover', 'kurt.toggleHeat', 'kurt.togglePause'];
 
 // the lines of each file that its last check went through (kept after the check ends: the stats of the hover)
 const checkedLines = new Map<string, number>();
 
 function statusTooltip(state: string): vscode.MarkdownString {
     const box = (on: boolean) => on ? '☑' : '☐';
+    const pause = paused;
     const hover = configuration().get<boolean>('hover.enabled', true);
     const heat = configuration().get<boolean>('heat.enabled', true);
     const version = client?.initializeResult?.serverInfo?.version;
@@ -127,10 +128,12 @@ function statusTooltip(state: string): vscode.MarkdownString {
     md.appendMarkdown('[$(debug-restart) Restart](command:kurt.restartServer)  \n' +
                       '[$(warning) Problems](command:kurt.showProblems)  \n' +
                       '[$(output) Output](command:kurt.showServerOutput)\n\n---\n\n' +
+                      `[${box(pause)}](command:kurt.togglePause) **Pause Kurt** *stops the language server:*  \n` +
+                      '*nothing is checked until you untick*\n\n---\n\n' +
                       `[${box(hover)}](command:kurt.toggleHover) **Hover boxes** *hover over a line: its certificate,*  \n` +
                       '*and what a fact rests on (axioms, `todo`s)*\n\n---\n\n' +
-                      `[${box(heat)}](command:kurt.toggleHeat) **Heat map** *tints the lines: green checked,*  \n` +
-                      '*yellow at work, orange to red the slower the search*');
+                      `[${box(heat)}](command:kurt.toggleHeat) **Heat map** *tints the lines: while checking, green done and*  \n` +
+                      '*yellow at work; then the slow ones, orange to red*');
     return md;
 }
 
@@ -214,7 +217,8 @@ async function statusMenu(): Promise<void> {
     const heat = configuration().get<boolean>('heat.enabled', true);
     const items: { label: string, id: string }[] = [];
     if (checking.size > 0) items.push({ label: '$(debug-stop) Cancel the check', id: 'cancel' });
-    items.push({ label: '$(debug-restart) Restart Kurt', id: 'restart' },
+    items.push({ label: paused ? '$(debug-continue) Resume Kurt' : '$(debug-pause) Pause Kurt', id: 'pause' },
+               { label: '$(debug-restart) Restart Kurt', id: 'restart' },
                { label: '$(warning) Show the problems', id: 'problems' },
                { label: '$(output) Show Kurt\'s output', id: 'output' },
                { label: hover ? '$(eye-closed) Switch off the hover boxes' : '$(eye) Switch on the hover boxes', id: 'hover' },
@@ -223,6 +227,7 @@ async function statusMenu(): Promise<void> {
     const target = workspaceFolder() ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
     switch (choice?.id) {
         case 'cancel': cancelChecks(); break;
+        case 'pause': await togglePause(); break;
         case 'restart': await queueRestart(); break;
         case 'problems': await vscode.commands.executeCommand('workbench.actions.view.problems'); break;
         case 'output': output.show(true); break;
@@ -244,7 +249,7 @@ async function recoveryMessage(error: unknown): Promise<void> {
 }
 
 async function startServer(): Promise<void> {
-    if (client) return;
+    if (client || paused) return;
     const config = configuration();
     const found = server();
     if (!found) {
@@ -269,8 +274,17 @@ async function startServer(): Promise<void> {
             // the reasons are drawn by `refreshReasons` (aligned at a column), not as inlay hints
             provideInlayHints: () => null,
             // the hover boxes (the certificate of a line, what a fact rests on) can be switched off in the status menu
-            provideHover: (document, position, token, next) =>
-                configuration().get<boolean>('hover.enabled', true) ? next(document, position, token) : undefined,
+            // plus the time of the line (the profile of the last check)
+            provideHover: async (document, position, token, next) => {
+                if (!configuration().get<boolean>('hover.enabled', true)) return undefined;
+                const hover = await next(document, position, token);
+                const entry = (profileOf.get(document.uri.toString()) ?? []).find(e => e.line === position.line + 1);
+                if (!entry) return hover;
+                const time = new vscode.MarkdownString(`$(watch) ${entry.seconds < 0.01 ? '< 0.01' : entry.seconds.toFixed(2)} s, ${entry.steps} search steps`, true);
+                if (!hover) return new vscode.Hover(time);
+                hover.contents = [...(Array.isArray(hover.contents) ? hover.contents : [hover.contents]), time];
+                return hover;
+            },
         },
     };
     const next = new LanguageClient('kurt', 'Kurt Language Server', serverOptions, clientOptions);
@@ -325,7 +339,26 @@ async function stopServer(): Promise<void> {
     if (old) await old.stop();
 }
 
+// Pause: the language server is stopped (nothing is checked, no diagnostics) until the box is unticked
+let paused = false;
+
+async function togglePause(): Promise<void> {
+    paused = !paused;
+    if (paused) {
+        for (const uri of [...checking.keys(), ...toasts.keys()]) toastEnd(uri);
+        checking.clear();
+        progressOf.clear();
+        setStatus('Kurt: paused', 'Paused: nothing is checked');
+        await stopServer();
+        setStatus('Kurt: paused', 'Paused: nothing is checked', 'kurt.togglePause');
+        refreshHeat();
+    } else {
+        await startServer();
+    }
+}
+
 async function restartServer(): Promise<void> {
+    paused = false;
     setStatus('Kurt: restarting…', 'Restarting Kurt language server');
     await stopServer();
     await startServer();
@@ -487,6 +520,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.commands.registerCommand('kurt.cancelCheck', cancelChecks),
         vscode.commands.registerCommand('kurt.showProblems', () => vscode.commands.executeCommand('workbench.actions.view.problems')),
         vscode.commands.registerCommand('kurt.toggleHover', () => toggleSetting('hover.enabled')),
+        vscode.commands.registerCommand('kurt.togglePause', togglePause),
         vscode.commands.registerCommand('kurt.toggleHeat', () => toggleSetting('heat.enabled')),
         vscode.commands.registerCommand('kurt.showServerOutput', () => output.show(true)),
         vscode.commands.registerCommand('kurt.selectExecutable', async () => {
