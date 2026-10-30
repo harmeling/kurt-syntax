@@ -18,7 +18,7 @@
       keywords: {
         $pattern: /[A-Za-z][A-Za-z0-9_]*/,
         // declarations
-        type: 'var const infix postfix prefix brackets arity bindop chain flat sym prop calc alias ' +
+        type: 'var const infix postfix prefix brackets arity binder nested chain flat sym prop calc alias ' +
               'sort default everything builtin',
         // statements and blocks
         keyword: 'load use assume case show def inline tex lean let pick proof qed with parse tokenize ' +

@@ -17,6 +17,14 @@ let restartQueue: Promise<void> = Promise.resolve();
 let stateSubscription: vscode.Disposable | undefined;
 let reasonDecoration: vscode.TextEditorDecorationType;
 let reasonTimer: ReturnType<typeof setTimeout> | undefined;
+// the heat map (Kurt 0.12): the lines checked so far and the line at work while a check runs (`kurt/progress`), and how long the
+// search for each line took (`kurt/profile`) -- tinted backgrounds, the slower the redder
+let progressDone: vscode.TextEditorDecorationType;
+let progressNow: vscode.TextEditorDecorationType;
+let heatLevels: vscode.TextEditorDecorationType[] = [];
+const HEAT_SECONDS = [0.05, 0.25, 1, 2.5];          // a line slower than the first is tinted, the more so the slower it is
+const progressOf = new Map<string, { line: number, done: boolean }>();
+const profileOf = new Map<string, { line: number, seconds: number, steps: number }[]>();
 let extensionPath = '';
 
 function configuration(): vscode.WorkspaceConfiguration {
@@ -150,6 +158,7 @@ async function startServer(): Promise<void> {
             strict: config.get<boolean>('server.strict', false),
             checkOnType: config.get<boolean>('checkOnType', true),
             allErrors: config.get<boolean>('allErrors', true),
+            heat: config.get<boolean>('heat.enabled', true),
         },
         middleware: {
             // the reasons are drawn by `refreshReasons` (aligned at a column), not as inlay hints
@@ -158,6 +167,15 @@ async function startServer(): Promise<void> {
     };
     const next = new LanguageClient('kurt', 'Kurt Language Server', serverOptions, clientOptions);
     client = next;
+    next.onNotification('kurt/progress', (params: { uri: string, line: number, done: boolean }) => {
+        if (params.done) progressOf.delete(params.uri); else progressOf.set(params.uri, { line: params.line, done: false });
+        refreshHeat(params.uri);
+    });
+    next.onNotification('kurt/profile', (params: { uri: string, lines: { line: number, seconds: number, steps: number }[] }) => {
+        profileOf.set(params.uri, params.lines);
+        progressOf.delete(params.uri);
+        refreshHeat(params.uri);
+    });
     stateSubscription = next.onDidChangeState(event => {
         if (event.newState === State.Starting) setStatus('Kurt: starting…', `${found.source}: ${command} ${args.join(' ')}`);
         if (event.newState === State.Running) {
@@ -289,6 +307,34 @@ async function refreshReasons(): Promise<void> {
     }
 }
 
+// the tints of one document: the lines before the one at work, that one, and -- when no check runs -- the heat of each line
+function refreshHeat(uri?: string): void {
+    const showProgress = configuration().get<boolean>('heat.progress', true);
+    for (const editor of vscode.window.visibleTextEditors) {
+        const document = editor.document;
+        if (document.languageId !== 'kurt' || (uri !== undefined && document.uri.toString() !== uri)) continue;
+        const key = document.uri.toString();
+        const enabled = configuration().get<boolean>('heat.enabled', true);
+        const progress = progressOf.get(key);
+        const done: vscode.Range[] = [];
+        const now: vscode.Range[] = [];
+        if (enabled && showProgress && progress) {
+            if (progress.line > 1) done.push(new vscode.Range(0, 0, Math.min(progress.line - 2, document.lineCount - 1), 0));
+            if (progress.line - 1 < document.lineCount) now.push(new vscode.Range(progress.line - 1, 0, progress.line - 1, 0));
+        }
+        editor.setDecorations(progressDone, done.map(range => ({ range: new vscode.Range(range.start, range.end), })));
+        editor.setDecorations(progressNow, now);
+        const levels: vscode.Range[][] = heatLevels.map(() => []);
+        if (enabled && !progress) {
+            for (const entry of profileOf.get(key) ?? []) {
+                const level = HEAT_SECONDS.filter(limit => entry.seconds >= limit).length - 1;
+                if (level >= 0 && entry.line - 1 < document.lineCount) levels[level].push(new vscode.Range(entry.line - 1, 0, entry.line - 1, 0));
+            }
+        }
+        heatLevels.forEach((type, i) => editor.setDecorations(type, levels[i]));
+    }
+}
+
 function scheduleReasons(): void {
     if (reasonTimer) clearTimeout(reasonTimer);
     reasonTimer = setTimeout(() => { void refreshReasons(); }, 100);
@@ -301,6 +347,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
     });
     context.subscriptions.push(reasonDecoration);
+    progressDone = vscode.window.createTextEditorDecorationType({ isWholeLine: true, backgroundColor: 'rgba(80, 180, 120, 0.07)' });
+    progressNow = vscode.window.createTextEditorDecorationType({ isWholeLine: true, backgroundColor: 'rgba(255, 200, 0, 0.28)' });
+    heatLevels = [0.10, 0.20, 0.32, 0.45].map(alpha =>
+        vscode.window.createTextEditorDecorationType({ isWholeLine: true, backgroundColor: `rgba(255, 90, 40, ${alpha})`,
+            overviewRulerColor: `rgba(255, 90, 40, ${alpha + 0.2})`, overviewRulerLane: vscode.OverviewRulerLane.Right }));
+    context.subscriptions.push(progressDone, progressNow, ...heatLevels);
     output = vscode.window.createOutputChannel('Kurt Language Server');
     status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 20);
     context.subscriptions.push(output, status);
@@ -339,9 +391,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             refreshProblemStatus();
             scheduleReasons();            // (the server publishes them after each check)
         }),
-        vscode.window.onDidChangeVisibleTextEditors(scheduleReasons),
+        vscode.window.onDidChangeVisibleTextEditors(() => { scheduleReasons(); refreshHeat(); }),
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('kurt.server') || event.affectsConfiguration('kurt.checkOnType') || event.affectsConfiguration('kurt.allErrors')) {
+            if (event.affectsConfiguration('kurt.heat')) refreshHeat();
+            if (event.affectsConfiguration('kurt.server') || event.affectsConfiguration('kurt.checkOnType') || event.affectsConfiguration('kurt.allErrors') || event.affectsConfiguration('kurt.heat.enabled')) {
                 void queueRestart();
             }
             if (event.affectsConfiguration('kurt.inlayHints') || event.affectsConfiguration('kurt.reasons')) {

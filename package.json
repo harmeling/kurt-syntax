@@ -162,6 +162,16 @@
                     "default": true,
                     "description": "Show all errors of a file: checking goes on after an error (Kurt 0.8.1 or newer). Off: only the first error, as `kurt` on the command line."
                 },
+                "kurt.heat.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Tint the background of the lines by how long Kurt's search for each took (orange, the slower the redder; Kurt 0.12 or newer)."
+                },
+                "kurt.heat.progress": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "While a check runs, tint the lines checked so far (green) and the line at work (yellow)."
+                },
                 "kurt.inlayHints.enabled": {
                     "type": "boolean",
                     "default": true,
