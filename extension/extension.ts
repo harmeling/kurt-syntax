@@ -112,7 +112,7 @@ const STATUS_COMMANDS = ['kurt.cancelCheck', 'kurt.restartServer', 'kurt.showPro
 const checkedLines = new Map<string, number>();
 
 function statusTooltip(state: string): vscode.MarkdownString {
-    const box = (on: boolean) => on ? '☑' : '☐';
+    const box = (on: boolean) => on ? '✅' : '⬜';   // emoji: larger than ☑ ☐
     const pause = paused;
     // "Running: no problems" -- the problems are a link
     const stateLine = state.startsWith('Running: ') ? `Running: [${state.slice('Running: '.length)}](command:kurt.showProblems)` : state;
