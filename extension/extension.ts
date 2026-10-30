@@ -113,27 +113,43 @@ function progressBar(done: number, total: number, width = 20): string {
     return '█'.repeat(filled) + '░'.repeat(width - filled);
 }
 
-function statusTooltip(headline: string): vscode.MarkdownString {
+// the lines of each file that its last check went through (kept after the check ends: the stats of the hover)
+const checkedLines = new Map<string, number>();
+
+function statusTooltip(state: string): vscode.MarkdownString {
     const box = (on: boolean) => on ? '☑' : '☐';
     const hover = configuration().get<boolean>('hover.enabled', true);
     const heat = configuration().get<boolean>('heat.enabled', true);
+    const version = client?.initializeResult?.serverInfo?.version;
     const md = new vscode.MarkdownString(undefined, true);
     md.isTrusted = { enabledCommands: STATUS_COMMANDS };
-    md.appendMarkdown(`**Kurt**\n\n${headline}\n\n`);
+    md.appendMarkdown(`**Kurt language server**${version ? ` ${version}` : ''}  \n${state}\n\n`);
+    const open = vscode.workspace.textDocuments.filter(doc => doc.languageId === 'kurt');
+    const lines = open.reduce((sum, doc) => sum + (checkedLines.get(doc.uri.toString()) ?? 0), 0);
+    md.appendMarkdown(`${open.length} Kurt file${open.length === 1 ? '' : 's'} open, ${lines} lines checked\n\n`);
     if (checking.size > 0) {
         for (const [uri, progress] of checking) {
             const name = path.basename(vscode.Uri.parse(uri).fsPath);
-            const count = progress.lines > 0 ? `${progress.line} / ${progress.lines}` : `line ${progress.line}`;
-            md.appendMarkdown(`$(file) \`${name}\`\n\n\`${progressBar(progress.line, progress.lines)}\` ${count}\n\n`);
+            const percent = progress.lines > 0 ? Math.round(100 * progress.line / progress.lines) : 0;
+            const count = progress.lines > 0 ? `${percent}% (line ${progress.line} of ${progress.lines})` : `line ${progress.line}`;
+            md.appendMarkdown(`$(file) \`${name}\`  \n\`${progressBar(progress.line, progress.lines)}\` ${count}\n\n`);
         }
         md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck)\n\n');
+    } else {
+        const current = vscode.window.activeTextEditor?.document;
+        if (current?.languageId === 'kurt' && checkedLines.has(current.uri.toString())) {
+            md.appendMarkdown(`$(file) \`${path.basename(current.uri.fsPath)}\`  \n\`${progressBar(1, 1)}\` 100%\n\n`);
+        }
     }
     // one entry per line (`  \n` is a line break without the gap of a paragraph)
     md.appendMarkdown('[$(debug-restart) Restart](command:kurt.restartServer)  \n' +
                       '[$(warning) Problems](command:kurt.showProblems)  \n' +
                       '[$(output) Output](command:kurt.showServerOutput)\n\n---\n\n' +
-                      `[${box(hover)}](command:kurt.toggleHover) Hover boxes  \n` +
-                      `[${box(heat)}](command:kurt.toggleHeat) Heat map`);
+                      `[${box(hover)}](command:kurt.toggleHover) **Hover boxes**  \n` +
+                      '<sub>hover over a line: its certificate, and what a fact rests on (axioms, `todo`s)</sub>  \n' +
+                      `[${box(heat)}](command:kurt.toggleHeat) **Heat map**  \n` +
+                      '<sub>tints the lines: green checked, yellow at work, orange to red the slower the search</sub>');
+    md.supportHtml = true;
     return md;
 }
 
@@ -155,7 +171,7 @@ function refreshProblemStatus(): void {
     }
     if (checking.size > 0) { showChecking(); return; }       // (a check runs: its progress is the status, until it ends)
     setStatus(problems ? `Kurt: ${problems} problem${problems === 1 ? '' : 's'}` : 'Kurt $(check)',
-              problems ? 'Kurt: problems found (click for the menu)' : 'Kurt language server is running: no problems (click for the menu)');
+              problems ? `Running: ${problems} problem${problems === 1 ? '' : 's'}` : 'Running: no problems');
 }
 
 // the status while a check runs (`kurt/progress` of Kurt 0.12): `Kurt: checking 12/84`, the file name in the tooltip
@@ -167,7 +183,7 @@ function showChecking(): void {
     const name = path.basename(vscode.Uri.parse(uri).fsPath);
     const where = progress.lines > 0 ? `line ${progress.line} of ${progress.lines}` : `line ${progress.line}`;
     setStatus(`$(sync~spin) Kurt: checking ${progress.lines > 0 ? `${progress.line}/${progress.lines}` : progress.line}`,
-              `Kurt is checking ${name}: ${where}`);
+              `Checking ${name}: ${where}`);
 }
 
 function cancelChecks(): void {
@@ -248,12 +264,14 @@ async function startServer(): Promise<void> {
     client = next;
     next.onNotification('kurt/progress', (params: { uri: string, line: number, lines: number, done: boolean }) => {
         if (params.done) {
+            if (params.lines > 0) checkedLines.set(params.uri, params.lines);
             progressOf.delete(params.uri);
             checking.delete(params.uri);
             refreshProblemStatus();
         } else {
             progressOf.set(params.uri, { line: params.line, done: false });
             checking.set(params.uri, { line: params.line, lines: params.lines });
+            if (params.lines > 0) checkedLines.set(params.uri, params.lines);
             showChecking();
         }
         refreshHeat(params.uri);
