@@ -123,7 +123,7 @@ function statusTooltip(state: string): vscode.MarkdownString {
     const version = client?.initializeResult?.serverInfo?.version;
     const md = new vscode.MarkdownString(undefined, true);
     md.isTrusted = { enabledCommands: STATUS_COMMANDS };
-    md.appendMarkdown(`**Kurt language server**${version ? ` ${version}` : ''}  \n${state}\n\n`);
+    md.appendMarkdown(`**Kurt language server**${version ? ` ${version}` : ''}  \n${state}  \n`);
     const open = vscode.workspace.textDocuments.filter(doc => doc.languageId === 'kurt');
     const lines = open.reduce((sum, doc) => sum + (checkedLines.get(doc.uri.toString()) ?? 0), 0);
     md.appendMarkdown(`${open.length} Kurt file${open.length === 1 ? '' : 's'} open, ${lines} lines checked\n\n`);
@@ -138,7 +138,7 @@ function statusTooltip(state: string): vscode.MarkdownString {
     } else {
         const current = vscode.window.activeTextEditor?.document;
         if (current?.languageId === 'kurt' && checkedLines.has(current.uri.toString())) {
-            md.appendMarkdown(`$(file) \`${path.basename(current.uri.fsPath)}\`  \n\`${progressBar(1, 1)}\` 100%\n\n`);
+            md.appendMarkdown(`\`${progressBar(1, 1)}\` 100%\n\n`);
         }
     }
     // one entry per line (`  \n` is a line break without the gap of a paragraph)
@@ -146,10 +146,9 @@ function statusTooltip(state: string): vscode.MarkdownString {
                       '[$(warning) Problems](command:kurt.showProblems)  \n' +
                       '[$(output) Output](command:kurt.showServerOutput)\n\n---\n\n' +
                       `[${box(hover)}](command:kurt.toggleHover) **Hover boxes**  \n` +
-                      '<sub>hover over a line: its certificate, and what a fact rests on (axioms, `todo`s)</sub>  \n' +
+                      '*hover over a line: its certificate, and what a fact rests on (axioms, `todo`s)*  \n' +
                       `[${box(heat)}](command:kurt.toggleHeat) **Heat map**  \n` +
-                      '<sub>tints the lines: green checked, yellow at work, orange to red the slower the search</sub>');
-    md.supportHtml = true;
+                      '*tints the lines: green checked, yellow at work, orange to red the slower the search*');
     return md;
 }
 
