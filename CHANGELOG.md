@@ -3,6 +3,10 @@
 The extension's version is Kurt's, since 0.9.0 (up to 0.8.6 it had its own numbers; each of
 those releases says which Kurt it comes with).
 
+## 0.12.0 (2026-10-30)
+
+- Comes with Kurt 0.12.0 (its keywords and `kurt.py`).
+
 ## 0.11.0 (2026-10-26)
 
 - Comes with Kurt 0.11.0.
