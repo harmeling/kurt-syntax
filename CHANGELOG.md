@@ -3,6 +3,24 @@
 The extension's version is Kurt's, since 0.9.0 (up to 0.8.6 it had its own numbers; each of
 those releases says which Kurt it comes with).
 
+## 0.12.1 (2026-10-30)
+
+- Comes with Kurt 0.12.0 (only the extension changed).
+
+- The status item: hovering it shows the server and its version, its state ("Running: no problems",
+  the problems a link to the Problems view), how many Kurt files are open and how many lines are
+  checked, a link to restart, and the options as checkboxes: **Pause Kurt** (stops the language
+  server until unticked), **Hover boxes** and **Heat map**, each with a short explanation. A
+  click on the item still opens the menu (now with Pause/Resume).
+
+- A check that takes longer than 1.5 s shows a progress toast: a blue bar, the file, the
+  percentage, and Cancel.
+
+- The hover of a line also shows the time and the search steps of that line (the profile of the last
+  check).
+
+- Switching the heat map on or off no longer restarts the server.
+
 ## 0.12.0 (2026-10-30)
 
 - Comes with Kurt 0.12.0 (its keywords and `kurt.py`).
