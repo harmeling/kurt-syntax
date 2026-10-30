@@ -112,7 +112,7 @@ const STATUS_COMMANDS = ['kurt.cancelCheck', 'kurt.restartServer', 'kurt.showPro
 const checkedLines = new Map<string, number>();
 
 function statusTooltip(state: string): vscode.MarkdownString {
-    const box = (on: boolean) => on ? '✅' : '⬜';   // emoji: larger than ☑ ☐
+    const box = (on: boolean) => on ? '☑' : '☐';
     const pause = paused;
     // "Running: no problems" -- the problems are a link
     const stateLine = state.startsWith('Running: ') ? `Running: [${state.slice('Running: '.length)}](command:kurt.showProblems)` : state;
@@ -269,7 +269,7 @@ async function startServer(): Promise<void> {
             strict: config.get<boolean>('server.strict', false),
             checkOnType: config.get<boolean>('checkOnType', true),
             allErrors: config.get<boolean>('allErrors', true),
-            heat: config.get<boolean>('heat.enabled', true),
+            heat: true,        // always: the heat map is switched on and off in the editor, without a restart of the server
         },
         middleware: {
             // the reasons are drawn by `refreshReasons` (aligned at a column), not as inlay hints
@@ -557,8 +557,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.window.onDidChangeVisibleTextEditors(() => { scheduleReasons(); refreshHeat(); }),
         vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('kurt.heat')) refreshHeat();
-            if (event.affectsConfiguration('kurt.hover')) refreshProblemStatus();
-            if (event.affectsConfiguration('kurt.server') || event.affectsConfiguration('kurt.checkOnType') || event.affectsConfiguration('kurt.allErrors') || event.affectsConfiguration('kurt.heat.enabled')) {
+            if (event.affectsConfiguration('kurt.hover') || event.affectsConfiguration('kurt.heat')) refreshProblemStatus();
+            if (event.affectsConfiguration('kurt.server') || event.affectsConfiguration('kurt.checkOnType') || event.affectsConfiguration('kurt.allErrors')) {
                 void queueRestart();
             }
             if (event.affectsConfiguration('kurt.inlayHints') || event.affectsConfiguration('kurt.reasons')) {
