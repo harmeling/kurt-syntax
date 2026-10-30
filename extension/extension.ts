@@ -114,20 +114,20 @@ const checkedLines = new Map<string, number>();
 function statusTooltip(state: string): vscode.MarkdownString {
     const box = (on: boolean) => on ? '☑' : '☐';
     const pause = paused;
+    // "Running: no problems" -- the problems are a link
+    const stateLine = state.startsWith('Running: ') ? `Running: [${state.slice('Running: '.length)}](command:kurt.showProblems)` : state;
     const hover = configuration().get<boolean>('hover.enabled', true);
     const heat = configuration().get<boolean>('heat.enabled', true);
     const version = client?.initializeResult?.serverInfo?.version;
     const md = new vscode.MarkdownString(undefined, true);
     md.isTrusted = { enabledCommands: STATUS_COMMANDS };
-    md.appendMarkdown(`**Kurt language server**${version ? ` ${version}` : ''}  \n${state}  \n`);
+    md.appendMarkdown(`**Kurt language server**${version ? ` ${version}` : ''} &nbsp;·&nbsp; [$(debug-restart) Restart](command:kurt.restartServer)  \n${stateLine}  \n`);
     const open = vscode.workspace.textDocuments.filter(doc => doc.languageId === 'kurt');
     const lines = open.reduce((sum, doc) => sum + (checkedLines.get(doc.uri.toString()) ?? 0), 0);
     md.appendMarkdown(`${open.length} Kurt file${open.length === 1 ? '' : 's'} open, ${lines} lines checked\n\n---\n\n`);
     if (checking.size > 0) md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck)  \n');
     // one entry per line (`  \n` is a line break without the gap of a paragraph)
-    md.appendMarkdown('[$(debug-restart) Restart](command:kurt.restartServer)  \n' +
-                      '[$(warning) Problems](command:kurt.showProblems)  \n' +
-                      '[$(output) Output](command:kurt.showServerOutput)\n\n---\n\n' +
+    md.appendMarkdown(
                       `[${box(pause)}](command:kurt.togglePause) **Pause Kurt** *stops the language server:*  \n` +
                       '*nothing is checked until you untick*\n\n---\n\n' +
                       `[${box(hover)}](command:kurt.toggleHover) **Hover boxes** *hover over a line: its certificate,*  \n` +
@@ -138,9 +138,11 @@ function statusTooltip(state: string): vscode.MarkdownString {
 }
 
 function setStatus(text: string, tooltip: string, command = 'kurt.statusMenu'): void {
-    status.text = text;
-    status.tooltip = statusTooltip(tooltip);
-    status.command = command;
+    // assign only what changed: a hover that is open flickers when its text is set again
+    const hover = statusTooltip(tooltip);
+    if (status.text !== text) status.text = text;
+    if (!(status.tooltip instanceof vscode.MarkdownString) || status.tooltip.value !== hover.value) status.tooltip = hover;
+    if (status.command !== command) status.command = command;
     status.show();
 }
 
@@ -165,9 +167,8 @@ function showChecking(): void {
     const entries = [...checking.entries()];
     const [uri, progress] = entries[entries.length - 1];
     const name = path.basename(vscode.Uri.parse(uri).fsPath);
-    const where = progress.lines > 0 ? `line ${progress.line} of ${progress.lines}` : `line ${progress.line}`;
     setStatus(`$(sync~spin) Kurt: checking ${progress.lines > 0 ? `${progress.line}/${progress.lines}` : progress.line}`,
-              `Checking ${name}: ${where}`);
+              `Checking ${name}`);
 }
 
 // a progress toast (blue bar, the file, the percentage, Cancel) for a check that takes longer than a moment
