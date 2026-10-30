@@ -121,16 +121,16 @@ function statusTooltip(state: string): vscode.MarkdownString {
     md.appendMarkdown(`**Kurt language server**${version ? ` ${version}` : ''}  \n${state}  \n`);
     const open = vscode.workspace.textDocuments.filter(doc => doc.languageId === 'kurt');
     const lines = open.reduce((sum, doc) => sum + (checkedLines.get(doc.uri.toString()) ?? 0), 0);
-    md.appendMarkdown(`${open.length} Kurt file${open.length === 1 ? '' : 's'} open, ${lines} lines checked\n\n`);
-    if (checking.size > 0) md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck)\n\n');
+    md.appendMarkdown(`${open.length} Kurt file${open.length === 1 ? '' : 's'} open, ${lines} lines checked\n\n---\n\n`);
+    if (checking.size > 0) md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck)  \n');
     // one entry per line (`  \n` is a line break without the gap of a paragraph)
     md.appendMarkdown('[$(debug-restart) Restart](command:kurt.restartServer)  \n' +
                       '[$(warning) Problems](command:kurt.showProblems)  \n' +
                       '[$(output) Output](command:kurt.showServerOutput)\n\n---\n\n' +
-                      `[${box(hover)}](command:kurt.toggleHover) **Hover boxes**  \n` +
-                      '*hover over a line: its certificate,*  \n*and what a fact rests on (axioms, `todo`s)*\n\n---\n\n' +
-                      `[${box(heat)}](command:kurt.toggleHeat) **Heat map**  \n` +
-                      '*tints the lines: green checked, yellow at work,*  \n*orange to red the slower the search*');
+                      `[${box(hover)}](command:kurt.toggleHover) **Hover boxes** *hover over a line: its certificate,*  \n` +
+                      '*and what a fact rests on (axioms, `todo`s)*\n\n---\n\n' +
+                      `[${box(heat)}](command:kurt.toggleHeat) **Heat map** *tints the lines: green checked,*  \n` +
+                      '*yellow at work, orange to red the slower the search*');
     return md;
 }
 
