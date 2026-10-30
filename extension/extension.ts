@@ -105,7 +105,7 @@ function server(): Server | undefined {
     return installed() ?? bundled();
 }
 
-function setStatus(text: string, tooltip: string, command = 'kurt.showServerOutput'): void {
+function setStatus(text: string, tooltip: string, command = 'kurt.statusMenu'): void {
     status.text = text;
     status.tooltip = tooltip;
     status.command = command;
@@ -121,9 +121,46 @@ function refreshProblemStatus(): void {
         problems += vscode.languages.getDiagnostics(document.uri)
             .filter(d => d.severity === vscode.DiagnosticSeverity.Error || d.severity === vscode.DiagnosticSeverity.Warning).length;
     }
+    if (checking.size > 0) { showChecking(); return; }       // (a check runs: its progress is the status, until it ends)
     setStatus(problems ? `Kurt: ${problems} problem${problems === 1 ? '' : 's'}` : 'Kurt $(check)',
-              problems ? 'Kurt diagnostics: show them' : 'Kurt language server is running: no problems (click for the Problems panel)',
-              'workbench.actions.view.problems');
+              problems ? 'Kurt: problems found (click for the menu)' : 'Kurt language server is running: no problems (click for the menu)');
+}
+
+// the status while a check runs (`kurt/progress` of Kurt 0.12): `Kurt: checking 12/84`, the file name in the tooltip
+const checking = new Map<string, { line: number, lines: number }>();
+
+function showChecking(): void {
+    const entries = [...checking.entries()];
+    const [uri, progress] = entries[entries.length - 1];
+    const name = path.basename(vscode.Uri.parse(uri).fsPath);
+    const where = progress.lines > 0 ? `line ${progress.line} of ${progress.lines}` : `line ${progress.line}`;
+    setStatus(`$(sync~spin) Kurt: checking ${progress.lines > 0 ? `${progress.line}/${progress.lines}` : progress.line}`,
+              `Kurt is checking ${name}: ${where} (click for the menu: cancel, restart, ...)`);
+}
+
+// the menu of the status item
+async function statusMenu(): Promise<void> {
+    const hover = configuration().get<boolean>('hover.enabled', true);
+    const heat = configuration().get<boolean>('heat.enabled', true);
+    const items: { label: string, id: string }[] = [];
+    if (checking.size > 0) items.push({ label: '$(debug-stop) Cancel the check', id: 'cancel' });
+    items.push({ label: '$(debug-restart) Restart Kurt', id: 'restart' },
+               { label: '$(warning) Show the problems', id: 'problems' },
+               { label: '$(output) Show Kurt\'s output', id: 'output' },
+               { label: hover ? '$(eye-closed) Switch off the hover boxes' : '$(eye) Switch on the hover boxes', id: 'hover' },
+               { label: heat ? '$(circle-slash) Switch off the heat map' : '$(flame) Switch on the heat map', id: 'heat' });
+    const choice = await vscode.window.showQuickPick(items, { placeHolder: 'Kurt' });
+    const target = workspaceFolder() ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+    switch (choice?.id) {
+        case 'cancel':
+            for (const uri of checking.keys()) void client?.sendNotification('kurt/cancel', { uri });
+            break;
+        case 'restart': await queueRestart(); break;
+        case 'problems': await vscode.commands.executeCommand('workbench.actions.view.problems'); break;
+        case 'output': output.show(true); break;
+        case 'hover': await configuration().update('hover.enabled', !hover, target); break;
+        case 'heat': await configuration().update('heat.enabled', !heat, target); break;
+    }
 }
 
 async function recoveryMessage(error: unknown): Promise<void> {
@@ -163,17 +200,30 @@ async function startServer(): Promise<void> {
         middleware: {
             // the reasons are drawn by `refreshReasons` (aligned at a column), not as inlay hints
             provideInlayHints: () => null,
+            // the hover boxes (the certificate of a line, what a fact rests on) can be switched off in the status menu
+            provideHover: (document, position, token, next) =>
+                configuration().get<boolean>('hover.enabled', true) ? next(document, position, token) : undefined,
         },
     };
     const next = new LanguageClient('kurt', 'Kurt Language Server', serverOptions, clientOptions);
     client = next;
-    next.onNotification('kurt/progress', (params: { uri: string, line: number, done: boolean }) => {
-        if (params.done) progressOf.delete(params.uri); else progressOf.set(params.uri, { line: params.line, done: false });
+    next.onNotification('kurt/progress', (params: { uri: string, line: number, lines: number, done: boolean }) => {
+        if (params.done) {
+            progressOf.delete(params.uri);
+            checking.delete(params.uri);
+            refreshProblemStatus();
+        } else {
+            progressOf.set(params.uri, { line: params.line, done: false });
+            checking.set(params.uri, { line: params.line, lines: params.lines });
+            showChecking();
+        }
         refreshHeat(params.uri);
     });
     next.onNotification('kurt/profile', (params: { uri: string, lines: { line: number, seconds: number, steps: number }[] }) => {
         profileOf.set(params.uri, params.lines);
         progressOf.delete(params.uri);
+        checking.delete(params.uri);
+        refreshProblemStatus();
         refreshHeat(params.uri);
     });
     stateSubscription = next.onDidChangeState(event => {
@@ -360,6 +410,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     context.subscriptions.push(
         vscode.commands.registerCommand('kurt.restartServer', queueRestart),
+        vscode.commands.registerCommand('kurt.statusMenu', statusMenu),
         vscode.commands.registerCommand('kurt.showServerOutput', () => output.show(true)),
         vscode.commands.registerCommand('kurt.selectExecutable', async () => {
             const selected = await vscode.window.showOpenDialog({ canSelectMany: false, openLabel: 'Select Kurt executable' });

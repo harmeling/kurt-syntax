@@ -81,6 +81,10 @@
         ],
         "commands": [
             {
+                "command": "kurt.statusMenu",
+                "title": "Kurt: Status Menu (cancel the check, restart, hover boxes, heat map)"
+            },
+            {
                 "command": "kurt.restartServer",
                 "title": "Kurt: Restart Language Server"
             },
@@ -161,6 +165,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show all errors of a file: checking goes on after an error (Kurt 0.8.1 or newer). Off: only the first error, as `kurt` on the command line."
+                },
+                "kurt.hover.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show Kurt's hover boxes (the certificate of a line, what a fact rests on). Also in the menu of the status item."
                 },
                 "kurt.heat.enabled": {
                     "type": "boolean",
