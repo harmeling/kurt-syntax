@@ -105,9 +105,40 @@ function server(): Server | undefined {
     return installed() ?? bundled();
 }
 
+// the hover of the status item (shown above it): a headline, the progress bar of a running check, and the commands as links
+const STATUS_COMMANDS = ['kurt.cancelCheck', 'kurt.restartServer', 'kurt.showProblems', 'kurt.showServerOutput', 'kurt.toggleHover', 'kurt.toggleHeat'];
+
+function progressBar(done: number, total: number, width = 20): string {
+    const filled = total > 0 ? Math.max(0, Math.min(width, Math.round(width * done / total))) : 0;
+    return '█'.repeat(filled) + '░'.repeat(width - filled);
+}
+
+function statusTooltip(headline: string): vscode.MarkdownString {
+    const box = (on: boolean) => on ? '$(check)' : '$(circle-large-outline)';
+    const hover = configuration().get<boolean>('hover.enabled', true);
+    const heat = configuration().get<boolean>('heat.enabled', true);
+    const md = new vscode.MarkdownString(undefined, true);
+    md.isTrusted = { enabledCommands: STATUS_COMMANDS };
+    md.appendMarkdown(`**Kurt**\n\n${headline}\n\n`);
+    if (checking.size > 0) {
+        for (const [uri, progress] of checking) {
+            const name = path.basename(vscode.Uri.parse(uri).fsPath);
+            const count = progress.lines > 0 ? `${progress.line} / ${progress.lines}` : `line ${progress.line}`;
+            md.appendMarkdown(`$(file) \`${name}\`\n\n\`${progressBar(progress.line, progress.lines)}\` ${count}\n\n`);
+        }
+        md.appendMarkdown('[$(debug-stop) Cancel the check](command:kurt.cancelCheck) &nbsp;\n\n');
+    }
+    md.appendMarkdown('[$(debug-restart) Restart](command:kurt.restartServer) &nbsp; ' +
+                      '[$(warning) Problems](command:kurt.showProblems) &nbsp; ' +
+                      '[$(output) Output](command:kurt.showServerOutput)\n\n---\n\n' +
+                      `[${box(hover)} Hover boxes](command:kurt.toggleHover) &nbsp; ` +
+                      `[${box(heat)} Heat map](command:kurt.toggleHeat)`);
+    return md;
+}
+
 function setStatus(text: string, tooltip: string, command = 'kurt.statusMenu'): void {
     status.text = text;
-    status.tooltip = tooltip;
+    status.tooltip = statusTooltip(tooltip);
     status.command = command;
     status.show();
 }
@@ -135,10 +166,19 @@ function showChecking(): void {
     const name = path.basename(vscode.Uri.parse(uri).fsPath);
     const where = progress.lines > 0 ? `line ${progress.line} of ${progress.lines}` : `line ${progress.line}`;
     setStatus(`$(sync~spin) Kurt: checking ${progress.lines > 0 ? `${progress.line}/${progress.lines}` : progress.line}`,
-              `Kurt is checking ${name}: ${where} (click for the menu: cancel, restart, ...)`);
+              `Kurt is checking ${name}: ${where}`);
 }
 
-// the menu of the status item
+function cancelChecks(): void {
+    for (const uri of checking.keys()) void client?.sendNotification('kurt/cancel', { uri });
+}
+
+async function toggleSetting(name: string): Promise<void> {
+    const target = workspaceFolder() ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+    await configuration().update(name, !configuration().get<boolean>(name, true), target);
+}
+
+// the menu of the status item (the click; the hover has the same commands)
 async function statusMenu(): Promise<void> {
     const hover = configuration().get<boolean>('hover.enabled', true);
     const heat = configuration().get<boolean>('heat.enabled', true);
@@ -152,9 +192,7 @@ async function statusMenu(): Promise<void> {
     const choice = await vscode.window.showQuickPick(items, { placeHolder: 'Kurt' });
     const target = workspaceFolder() ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
     switch (choice?.id) {
-        case 'cancel':
-            for (const uri of checking.keys()) void client?.sendNotification('kurt/cancel', { uri });
-            break;
+        case 'cancel': cancelChecks(); break;
         case 'restart': await queueRestart(); break;
         case 'problems': await vscode.commands.executeCommand('workbench.actions.view.problems'); break;
         case 'output': output.show(true); break;
@@ -411,6 +449,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         vscode.commands.registerCommand('kurt.restartServer', queueRestart),
         vscode.commands.registerCommand('kurt.statusMenu', statusMenu),
+        vscode.commands.registerCommand('kurt.cancelCheck', cancelChecks),
+        vscode.commands.registerCommand('kurt.showProblems', () => vscode.commands.executeCommand('workbench.actions.view.problems')),
+        vscode.commands.registerCommand('kurt.toggleHover', () => toggleSetting('hover.enabled')),
+        vscode.commands.registerCommand('kurt.toggleHeat', () => toggleSetting('heat.enabled')),
         vscode.commands.registerCommand('kurt.showServerOutput', () => output.show(true)),
         vscode.commands.registerCommand('kurt.selectExecutable', async () => {
             const selected = await vscode.window.showOpenDialog({ canSelectMany: false, openLabel: 'Select Kurt executable' });
@@ -445,6 +487,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.window.onDidChangeVisibleTextEditors(() => { scheduleReasons(); refreshHeat(); }),
         vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('kurt.heat')) refreshHeat();
+            if (event.affectsConfiguration('kurt.hover')) refreshProblemStatus();
             if (event.affectsConfiguration('kurt.server') || event.affectsConfiguration('kurt.checkOnType') || event.affectsConfiguration('kurt.allErrors') || event.affectsConfiguration('kurt.heat.enabled')) {
                 void queueRestart();
             }
