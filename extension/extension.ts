@@ -185,6 +185,38 @@ function showChecking(): void {
               `Checking ${name}: ${where}`);
 }
 
+// a progress toast (blue bar, the file, the percentage, Cancel) for a check that takes longer than a moment
+const TOAST_AFTER_MS = 1500;
+const toasts = new Map<string, { progress: vscode.Progress<{ message?: string, increment?: number }>, end: () => void, last: number }>();
+const toastTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function toastProgress(uri: string, line: number, lines: number): void {
+    const toast = toasts.get(uri);
+    if (toast) {
+        const percent = lines > 0 ? Math.round(100 * line / lines) : 0;
+        toast.progress.report({ increment: Math.max(0, percent - toast.last), message: lines > 0 ? `${percent}% (line ${line} of ${lines})` : `line ${line}` });
+        toast.last = Math.max(toast.last, percent);
+    } else if (!toastTimers.has(uri)) {
+        toastTimers.set(uri, setTimeout(() => {
+            toastTimers.delete(uri);
+            if (!checking.has(uri)) return;
+            const name = path.basename(vscode.Uri.parse(uri).fsPath);
+            void vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `Kurt: checking ${name}`, cancellable: true },
+                (progress, token) => new Promise<void>(resolve => {
+                    toasts.set(uri, { progress, end: resolve, last: 0 });
+                    token.onCancellationRequested(() => { void client?.sendNotification('kurt/cancel', { uri }); resolve(); toasts.delete(uri); });
+                }));
+        }, TOAST_AFTER_MS));
+    }
+}
+
+function toastEnd(uri: string): void {
+    clearTimeout(toastTimers.get(uri));
+    toastTimers.delete(uri);
+    toasts.get(uri)?.end();
+    toasts.delete(uri);
+}
+
 function cancelChecks(): void {
     for (const uri of checking.keys()) void client?.sendNotification('kurt/cancel', { uri });
 }
@@ -266,11 +298,13 @@ async function startServer(): Promise<void> {
             if (params.lines > 0) checkedLines.set(params.uri, params.lines);
             progressOf.delete(params.uri);
             checking.delete(params.uri);
+            toastEnd(params.uri);
             refreshProblemStatus();
         } else {
             progressOf.set(params.uri, { line: params.line, done: false });
             checking.set(params.uri, { line: params.line, lines: params.lines });
             if (params.lines > 0) checkedLines.set(params.uri, params.lines);
+            toastProgress(params.uri, params.line, params.lines);
             showChecking();
         }
         refreshHeat(params.uri);
@@ -279,6 +313,7 @@ async function startServer(): Promise<void> {
         profileOf.set(params.uri, params.lines);
         progressOf.delete(params.uri);
         checking.delete(params.uri);
+        toastEnd(params.uri);
         refreshProblemStatus();
         refreshHeat(params.uri);
     });
